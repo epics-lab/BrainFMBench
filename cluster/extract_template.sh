@@ -41,9 +41,11 @@ if [ -f "$REQS" ]; then
         virtualenv --no-download "$VENV"
         source "$VENV/bin/activate"
         pip install --no-index --upgrade pip
+        # Compute nodes have no outbound network: wheelhouse only.
         if ! pip install --no-index -r "$REQS"; then
-            echo "[env] wheelhouse miss; trying PyPI (compute nodes may have no network)"
-            pip install -r "$REQS"
+            echo "[env] ERROR: a requirement is not in the Alliance wheelhouse."
+            echo "[env] See https://docs.alliancecan.ca/wiki/Available_Python_wheels"
+            exit 1
         fi
         echo "$REQS_HASH" > "$STAMP"
     else

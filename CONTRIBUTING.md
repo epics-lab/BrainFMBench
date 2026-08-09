@@ -84,9 +84,12 @@ torch==2.4.0
 monai==1.3.0
 ```
 
-Prefer packages available in the Alliance wheelhouse; anything else falls back
-to PyPI and slows the first build. The venv is built once per submission,
-reused across datasets, and rebuilt only when `requirements.txt` changes.
+Every package must be available in the Alliance wheelhouse — cluster compute
+nodes have no outbound network, so PyPI is unreachable at build time. Check
+availability at https://docs.alliancecan.ca/wiki/Available_Python_wheels before
+submitting. If something you need is missing, open an issue and we will work
+out an alternative. The venv is built once per submission, reused across
+datasets, and rebuilt only when `requirements.txt` changes.
 
 ## What happens after you open the PR
 
