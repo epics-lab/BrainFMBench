@@ -10,10 +10,13 @@ set -euo pipefail
 
 MODEL_SLUG="__MODEL_SLUG__"
 DATASET="__DATASET__"
-WORKDIR="__WORKDIR__"                     
-INPUT_DIR="__INPUT_DIR__"                
-WEIGHTS_DIR="$WORKDIR/weights"
-EXTRACT_PY="$WORKDIR/extract.py"
+WORKDIR="__WORKDIR__"          # staging/<slug>/<dataset>: per-dataset outputs
+MODELDIR="__MODELDIR__"        # staging/<slug>: venv, weights, extract.py
+INPUT_DIR="__INPUT_DIR__"
+
+WEIGHTS_DIR="$MODELDIR/weights"
+EXTRACT_PY="$MODELDIR/extract.py"
+VENV="$MODELDIR/venv"
 OUT_CSV="$WORKDIR/${DATASET}.csv"
 DONE_FLAG="$WORKDIR/${DATASET}.done"
 
@@ -21,10 +24,17 @@ echo "[$(date)] extraction start: model=$MODEL_SLUG dataset=$DATASET"
 echo "  input_dir=$INPUT_DIR"
 echo "  weights_dir=$WEIGHTS_DIR"
 
-module load StdEnv/2023 python/3.11 2>/dev/null || true
-source "$WORKDIR/venv/bin/activate" 2>/dev/null || true
+module load StdEnv/2023 python/3.11
 
-# The contract: extract.py exposes  extract(input_dir, output_csv, weights_dir)
+# Built by cluster_runner.py on the login node; compute nodes have no network.
+if [ -d "$VENV" ]; then
+    echo "[env] activating submission venv"
+    source "$VENV/bin/activate"
+else
+    echo "[env] no submission venv -- using shared module environment"
+fi
+echo "[env] python: $(which python)"
+
 python - "$INPUT_DIR" "$OUT_CSV" "$WEIGHTS_DIR" "$EXTRACT_PY" <<'PYEOT'
 import sys, importlib.util
 input_dir, output_csv, weights_dir, extract_py = sys.argv[1:5]
@@ -36,12 +46,11 @@ if not hasattr(mod, "extract"):
 mod.extract(input_dir, output_csv, weights_dir)
 PYEOT
 
-# sanity: output must exist and be non-trivial
 if [ ! -s "$OUT_CSV" ]; then
     echo "ERROR: extract.py produced no output CSV"
     exit 1
 fi
 
-# sentinel written ONLY on success
+# Sentinel; the reaper treats its absence as "not finished".
 echo "$(date)" > "$DONE_FLAG"
 echo "[$(date)] extraction done: wrote $OUT_CSV and $DONE_FLAG"
