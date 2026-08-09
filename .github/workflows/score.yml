@@ -2,6 +2,7 @@ name: score
 
 on:
   push:
+    branches: [main]
     paths: ["models/**", "labels/**", "eval/**", "scripts/**"]
   workflow_dispatch:
 
@@ -34,7 +35,13 @@ jobs:
           if [ "${{ github.event_name }}" != "push" ]; then
             echo "all=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
-          CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null || true)
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "all=false" >> "$GITHUB_OUTPUT"
+            echo "slugs=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}" 2>/dev/null || true)
           if [ -z "$CHANGED" ] || echo "$CHANGED" | grep -qE '^(eval/|labels/|scripts/)'; then
             echo "all=true" >> "$GITHUB_OUTPUT"
           else
