@@ -5,6 +5,7 @@ BrainFMBench cluster runner (the async reap/sow orchestrator).
 import os
 import sys
 import json
+import hashlib
 import urllib.request
 
 import yaml
@@ -58,13 +59,63 @@ def download_weights(weights_txt, dest_dir):
     return saved
 
 
-def render_template(slug, dataset, workdir, input_dir):
+def render_template(slug, dataset, workdir, modeldir, input_dir):
     t = open(TEMPLATE).read()
     return (t.replace("__JOBNAME__", job_name(slug, dataset))
              .replace("__MODEL_SLUG__", slug)
              .replace("__DATASET__", dataset)
              .replace("__WORKDIR__", workdir)
+             .replace("__MODELDIR__", modeldir)
              .replace("__INPUT_DIR__", input_dir))
+
+
+def ensure_venv(ssh, sub, modeldir):
+    """Build the submission's venv on the login node. Compute nodes have no
+    outbound network, so pip cannot run inside the sbatch job."""
+    reqs_local = os.path.join(sub["dir"], "requirements.txt")
+
+    if not os.path.isfile(reqs_local):
+        ssh.run(f"rm -rf {modeldir}/venv {modeldir}/requirements.txt", check=False)
+        print("    ENV: no requirements.txt -> shared environment")
+        return
+
+    reqs_hash = hashlib.sha256(open(reqs_local, "rb").read()).hexdigest()
+    rc, out, _ = ssh.run(f"cat {modeldir}/venv/.reqs_sha256 2>/dev/null", check=False)
+    if rc == 0 and out.strip() == reqs_hash:
+        print("    ENV: venv up to date, reusing")
+        return
+
+    ssh.scp_up(reqs_local, f"{modeldir}/requirements.txt")
+    print("    ENV: building venv on login node (may take several minutes)")
+
+    build = (
+        f"module load StdEnv/2023 python/3.11 && "
+        f"rm -rf {modeldir}/venv && "
+        f"virtualenv --no-download {modeldir}/venv && "
+        f"source {modeldir}/venv/bin/activate && "
+        f"pip install --no-index --upgrade pip && "
+        f"(pip install --no-index -r {modeldir}/requirements.txt "
+        f"|| pip install -r {modeldir}/requirements.txt) && "
+        f"echo {reqs_hash} > {modeldir}/venv/.reqs_sha256"
+    )
+    rc, out, err = ssh.run(build, check=False)
+    if rc != 0:
+        raise RuntimeError(f"venv build failed for {sub['slug']}:\n{err}")
+    print("    ENV: venv ready")
+
+
+def stage_weights(ssh, sub, modeldir):
+    """Weights live at model level, so both datasets share one download."""
+    rc, out, _ = ssh.run(f"ls -A {modeldir}/weights 2>/dev/null", check=False)
+    if rc == 0 and out.strip():
+        print("    WEIGHTS: already staged, skipping download")
+        return
+
+    local_wdir = os.path.join("/tmp", f"ombench_{sub['slug']}_weights")
+    os.makedirs(local_wdir, exist_ok=True)
+    download_weights(os.path.join(sub["dir"], "weights.txt"), local_wdir)
+    for wf in os.listdir(local_wdir):
+        ssh.scp_up(os.path.join(local_wdir, wf), f"{modeldir}/weights/{wf}")
 
 
 def sow(ssh, sub, dataset):
@@ -74,26 +125,22 @@ def sow(ssh, sub, dataset):
     if prep not in SUPPORTED_PREP:
         print(f"    SKIP sow: unsupported preprocessing '{prep}'")
         return
-    workdir = f"{CLUSTER_STAGING}/{slug}/{dataset}"
+
+    modeldir = f"{CLUSTER_STAGING}/{slug}"
+    workdir = f"{modeldir}/{dataset}"
     input_dir = f"{CLUSTER_DATA}/{dataset}/{prep}"
 
-    # local staging (weights downloaded here, then scp'd up)
     local_stage = os.path.join("/tmp", f"ombench_{slug}_{dataset}")
     os.makedirs(local_stage, exist_ok=True)
-    wdir = os.path.join(local_stage, "weights")
-    download_weights(os.path.join(sub["dir"], "weights.txt"), wdir)
-
-    # write the rendered sbatch script locally
     job_sh = os.path.join(local_stage, "job.sh")
     with open(job_sh, "w") as f:
-        f.write(render_template(slug, dataset, workdir, input_dir))
+        f.write(render_template(slug, dataset, workdir, modeldir, input_dir))
 
-    # make the cluster workdir and push everything up
-    ssh.run(f"mkdir -p {workdir}/weights")
-    ssh.scp_up(os.path.join(sub["dir"], "extract.py"), f"{workdir}/extract.py")
+    ssh.run(f"mkdir -p {workdir} {modeldir}/weights")
+    ensure_venv(ssh, sub, modeldir)
+    stage_weights(ssh, sub, modeldir)
+    ssh.scp_up(os.path.join(sub["dir"], "extract.py"), f"{modeldir}/extract.py")
     ssh.scp_up(job_sh, f"{workdir}/job.sh")
-    for wf in os.listdir(wdir):
-        ssh.scp_up(os.path.join(wdir, wf), f"{workdir}/weights/{wf}")
 
     rc, out, err = ssh.run(f"sbatch --chdir={workdir} {workdir}/job.sh", check=False)
     if rc == 0:
@@ -126,7 +173,7 @@ def main():
                         (os.path.join(REPO, "models", x) for x in os.listdir(os.path.join(REPO, "models")))
                         if os.path.isdir(d))
 
-    any_reaped = False
+    reaped_slugs = set()
     for md in model_dirs:
         sub = load_submission(md)
         # only code-submissions (have extract.py + weights.txt) need the cluster;
@@ -144,7 +191,8 @@ def main():
                 if dry:
                     print(f'  {dataset}: [dry] would REAP')
                 else:
-                    reap(ssh, sub, dataset); any_reaped = True
+                    reap(ssh, sub, dataset)
+                    reaped_slugs.add(sub["slug"])
             elif jn in queued:
                 print(f"  {dataset}: job {jn} still in queue -> skip (reap later)")
             else:
@@ -154,9 +202,14 @@ def main():
                 else:
                     sow(ssh, sub, dataset)
 
-    print(f"\ndone. reaped_any={any_reaped}")
-    # signal to the workflow whether new features arrived (so it can score+commit)
-    print(f"::set-output name=reaped::{str(any_reaped).lower()}")
+    slugs = " ".join(sorted(reaped_slugs))
+    print(f"\ndone. reaped={slugs or 'none'}")
+
+    # Which models gained features, so the workflow scores only those.
+    gh_out = os.environ.get("GITHUB_OUTPUT")
+    if gh_out:
+        with open(gh_out, "a") as f:
+            f.write(f"reaped={slugs}\n")
     return 0
 
 
