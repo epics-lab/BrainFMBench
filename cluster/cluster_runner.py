@@ -4,8 +4,6 @@ BrainFMBench cluster runner (the async reap/sow orchestrator).
 """
 import os
 import sys
-import json
-import hashlib
 import urllib.request
 
 import yaml
@@ -87,7 +85,8 @@ def ensure_venv(ssh, sub, modeldir):
 
 def stage_weights(ssh, sub, modeldir):
     """Weights live at model level, so both datasets share one download."""
-    rc, out, _ = ssh.run(f"ls -A {modeldir}/weights 2>/dev/null", check=False)
+    # No shell redirects here: the whitelist passes them as literal arguments.
+    rc, out, _ = ssh.run(f"ls -A {modeldir}/weights", check=False)
     if rc == 0 and out.strip():
         print("    WEIGHTS: already staged, skipping download")
         return
