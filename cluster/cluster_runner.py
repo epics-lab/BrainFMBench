@@ -70,8 +70,10 @@ def render_template(slug, dataset, workdir, modeldir, input_dir):
 
 
 def ensure_venv(ssh, sub, modeldir):
-    """Build the submission's venv on the login node. Compute nodes have no
-    outbound network, so pip cannot run inside the sbatch job."""
+    """Stage requirements.txt; the sbatch job builds the venv from it.
+
+    The robot account's whitelist permits no shell chaining, so the build
+    cannot run here."""
     reqs_local = os.path.join(sub["dir"], "requirements.txt")
 
     if not os.path.isfile(reqs_local):
@@ -79,29 +81,8 @@ def ensure_venv(ssh, sub, modeldir):
         print("    ENV: no requirements.txt -> shared environment")
         return
 
-    reqs_hash = hashlib.sha256(open(reqs_local, "rb").read()).hexdigest()
-    rc, out, _ = ssh.run(f"cat {modeldir}/venv/.reqs_sha256 2>/dev/null", check=False)
-    if rc == 0 and out.strip() == reqs_hash:
-        print("    ENV: venv up to date, reusing")
-        return
-
     ssh.scp_up(reqs_local, f"{modeldir}/requirements.txt")
-    print("    ENV: building venv on login node (may take several minutes)")
-
-    build = (
-        f"module load StdEnv/2023 python/3.11 && "
-        f"rm -rf {modeldir}/venv && "
-        f"virtualenv --no-download {modeldir}/venv && "
-        f"source {modeldir}/venv/bin/activate && "
-        f"pip install --no-index --upgrade pip && "
-        f"(pip install --no-index -r {modeldir}/requirements.txt "
-        f"|| pip install -r {modeldir}/requirements.txt) && "
-        f"echo {reqs_hash} > {modeldir}/venv/.reqs_sha256"
-    )
-    rc, out, err = ssh.run(build, check=False)
-    if rc != 0:
-        raise RuntimeError(f"venv build failed for {sub['slug']}:\n{err}")
-    print("    ENV: venv ready")
+    print("    ENV: staged requirements.txt (venv built in the job)")
 
 
 def stage_weights(ssh, sub, modeldir):

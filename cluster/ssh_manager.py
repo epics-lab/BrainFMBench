@@ -18,9 +18,19 @@ class ClusterSSH:
         ]
 
     def run(self, remote_cmd, check=True, capture=True):
-        """Run a command on the automation node. Returns (rc, stdout, stderr)."""
+        """Run a command on the automation node. Returns (rc, stdout, stderr).
+
+        The robot account is behind allowed_commands.sh, which rejects unknown
+        commands but still exits 0, so rejection must be detected from stdout.
+        That whitelist also expands $SSH_ORIGINAL_COMMAND unquoted, so ';',
+        '&&' and redirects are passed as literal arguments: one command only.
+        """
         cmd = ["ssh"] + self.ssh_opts + [self.host, remote_cmd]
         p = subprocess.run(cmd, capture_output=capture, text=True)
+        if "Command rejected by" in (p.stdout or ""):
+            if check:
+                raise RuntimeError(f"remote command not permitted: {remote_cmd}")
+            return 126, (p.stdout or ""), (p.stderr or "")
         if check and p.returncode != 0:
             raise RuntimeError(
                 f"remote command failed (rc={p.returncode}): {remote_cmd}\n"
@@ -28,15 +38,13 @@ class ClusterSSH:
         return p.returncode, (p.stdout or ""), (p.stderr or "")
 
     def exists(self, remote_path):
-        """True if a file/dir exists on the cluster.
-        """
+        """True if a file/dir exists on the cluster."""
         cmd = ["rsync"] + self.ssh_opts_for_rsync() + [
             "--list-only", f"{self.host}:{remote_path}"]
         p = subprocess.run(cmd, capture_output=True, text=True)
         return p.returncode == 0
 
     def ssh_opts_for_rsync(self):
-        # rsync needs the ssh options passed via -e
         joined = "ssh " + " ".join(self.ssh_opts)
         return ["-e", joined]
 
@@ -55,8 +63,7 @@ class ClusterSSH:
             raise RuntimeError(f"scp down failed: {remote_path} -> {local_path}\n{p.stderr}")
 
     def squeue_job_names(self, user="arelbaha"):
-        """Return the set of job NAMES currently queued/running for the user.
-        Used to avoid resubmitting a job that's already in flight."""
+        """Return the set of job NAMES currently queued/running for the user."""
         rc, out, _ = self.run(f"squeue -u {user} -h -o %j", check=False)
         if rc != 0:
             return set()

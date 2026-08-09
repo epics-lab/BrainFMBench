@@ -2,7 +2,7 @@
 #SBATCH --account=rrg-glatard
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
-#SBATCH --time=2:00:00
+#SBATCH --time=3:00:00
 #SBATCH --job-name=__JOBNAME__
 #SBATCH --output=__WORKDIR__/extract_%j.out
 
@@ -16,6 +16,7 @@ INPUT_DIR="__INPUT_DIR__"
 
 WEIGHTS_DIR="$MODELDIR/weights"
 EXTRACT_PY="$MODELDIR/extract.py"
+REQS="$MODELDIR/requirements.txt"
 VENV="$MODELDIR/venv"
 OUT_CSV="$WORKDIR/${DATASET}.csv"
 DONE_FLAG="$WORKDIR/${DATASET}.done"
@@ -26,13 +27,35 @@ echo "  weights_dir=$WEIGHTS_DIR"
 
 module load StdEnv/2023 python/3.11
 
-# Built by cluster_runner.py on the login node; compute nodes have no network.
-if [ -d "$VENV" ]; then
-    echo "[env] activating submission venv"
-    source "$VENV/bin/activate"
+# Both dataset jobs for this model share $MODELDIR, so serialise the build.
+exec 200>"$MODELDIR/.venv.lock"
+flock 200
+
+if [ -f "$REQS" ]; then
+    REQS_HASH="$(sha256sum "$REQS" | cut -d' ' -f1)"
+    STAMP="$VENV/.reqs_sha256"
+
+    if [ ! -f "$STAMP" ] || [ "$(cat "$STAMP")" != "$REQS_HASH" ]; then
+        echo "[env] building venv for $MODEL_SLUG"
+        rm -rf "$VENV"
+        virtualenv --no-download "$VENV"
+        source "$VENV/bin/activate"
+        pip install --no-index --upgrade pip
+        if ! pip install --no-index -r "$REQS"; then
+            echo "[env] wheelhouse miss; trying PyPI (compute nodes may have no network)"
+            pip install -r "$REQS"
+        fi
+        echo "$REQS_HASH" > "$STAMP"
+    else
+        echo "[env] reusing venv (requirements unchanged)"
+        source "$VENV/bin/activate"
+    fi
 else
-    echo "[env] no submission venv -- using shared module environment"
+    echo "[env] no requirements.txt -- using shared module environment"
 fi
+
+flock -u 200
+
 echo "[env] python: $(which python)"
 
 python - "$INPUT_DIR" "$OUT_CSV" "$WEIGHTS_DIR" "$EXTRACT_PY" <<'PYEOT'
