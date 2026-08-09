@@ -7,9 +7,10 @@ on:
       - "models/**/extract.py"
       - "models/**/weights.txt"
       - "models/**/model.yaml"
+      - "models/**/requirements.txt"
   schedule:
-    - cron: "0 */3 * * *"      
-  workflow_dispatch:            
+    - cron: "0 6 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -21,6 +22,7 @@ concurrency:
 jobs:
   extract:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,33 +45,25 @@ jobs:
 
       - name: Run cluster runner (reap / sow)
         id: runner
-        run: python cluster/cluster_runner.py | tee runner.log
-        
-
-      - name: Detect reaped features
-        id: check
         run: |
-          if grep -q "reaped::true" runner.log; then
-            echo "reaped=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "reaped=false" >> "$GITHUB_OUTPUT"
-          fi
+          set -o pipefail
+          python cluster/cluster_runner.py | tee runner.log
 
       - name: Score newly reaped models
-        if: steps.check.outputs.reaped == 'true'
+        if: steps.runner.outputs.reaped != ''
         run: |
-          pip install scikit-learn==1.7.1 numpy==2.4.2 pandas==2.2.3 matplotlib
-          for d in models/*/; do
-            # only (re)score models that now have features but stale/no results
-            python scripts/score_all.py "$d" || true
+          pip install -r eval/requirements-scoring.txt
+          for slug in ${{ steps.runner.outputs.reaped }}; do
+            python scripts/score_all.py "models/$slug"
           done
           python scripts/make_leaderboard.py
 
       - name: Commit reaped features + results + leaderboard
-        if: steps.check.outputs.reaped == 'true'
+        if: steps.runner.outputs.reaped != ''
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add models/*/features/*.csv models/*/results.json LEADERBOARD.md leaderboard_boxplots.png
+          git add -A models
+          git add LEADERBOARD.md leaderboard_boxplots.png
           git diff --staged --quiet || git commit -m "Cluster: add extracted features + scores [skip ci]"
           git push
