@@ -1,19 +1,55 @@
-name: validate-models
+name: validate
 
 on:
-  push:
   pull_request:
+    paths:
+      - "models/**"
+      - "example-submission/**"
+  push:
+    branches: [main]
     paths:
       - "models/**"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - run: pip install pyyaml
-      - run: python scripts/validate_submission.py
+
+      - name: Validate submission metadata (yaml schema)
+        run: python scripts/validate_submission.py
+
+      - name: Validate extract.py in each submission's own environment
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            DIRS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep '^models/' | cut -d/ -f1,2 | sort -u)
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            DIRS=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null | grep '^models/' | cut -d/ -f1,2 | sort -u || true)
+          else
+            DIRS=$(ls -d models/*/ | sed 's:/$::')
+          fi
+          for d in $DIRS; do
+            [ -f "$d/extract.py" ] || continue
+            echo "::group::$d"
+            python -m venv /tmp/subenv
+            . /tmp/subenv/bin/activate
+            pip install --quiet numpy nibabel pyyaml
+            [ -f "$d/requirements.txt" ] && pip install --quiet -r "$d/requirements.txt"
+            python scripts/validate_extract.py "$d"
+            deactivate
+            rm -rf /tmp/subenv
+            echo "::endgroup::"
+          done

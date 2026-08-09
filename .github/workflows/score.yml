@@ -6,31 +6,65 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write          
+  contents: write
+
+concurrency:
+  group: score
+  cancel-in-progress: false
 
 jobs:
   score:
     runs-on: ubuntu-latest
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: true    
+          persist-credentials: true
+          fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install scikit-learn==1.7.1 numpy==2.4.2 pandas==2.2.3 pyyaml matplotlib
-      - name: Score all models
+
+      - run: pip install -r eval/requirements-scoring.txt
+
+      - name: Determine scope
+        id: scope
         run: |
-          for d in models/*/; do
+          if [ "${{ github.event_name }}" != "push" ]; then
+            echo "all=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" 2>/dev/null || true)
+          if [ -z "$CHANGED" ] || echo "$CHANGED" | grep -qE '^(eval/|labels/|scripts/)'; then
+            echo "all=true" >> "$GITHUB_OUTPUT"
+          else
+            SLUGS=$(echo "$CHANGED" | grep '^models/' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+            echo "all=false" >> "$GITHUB_OUTPUT"
+            echo "slugs=$SLUGS" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Score
+        run: |
+          if [ "${{ steps.scope.outputs.all }}" = "true" ]; then
+            TARGETS=$(ls -d models/*/)
+          else
+            TARGETS=""
+            for s in ${{ steps.scope.outputs.slugs }}; do
+              [ -d "models/$s" ] && TARGETS="$TARGETS models/$s"
+            done
+          fi
+          echo "scoring: ${TARGETS:-nothing}"
+          for d in $TARGETS; do
             echo "=== $d ==="
             python scripts/score_all.py "$d"
           done
-      - name: Regenerate leaderboard
-        run: python scripts/make_leaderboard.py
+          python scripts/make_leaderboard.py
+
       - name: Commit results + leaderboard
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add models/*/results.json LEADERBOARD.md
+          git add -A models
+          git add LEADERBOARD.md leaderboard_boxplots.png
           git diff --staged --quiet || git commit -m "Update results + leaderboard [skip ci]"
           git push
