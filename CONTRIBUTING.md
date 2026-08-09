@@ -1,6 +1,6 @@
 # Contributing a model to BrainFMBench
 
-BrainFMBench evaluates **frozen features** from brain MRI models on 
+BrainFMBench evaluates **frozen features** from brain MRI models on
 neuroimaging datasets (NKI, HBN) across sex classification and age / BMI
 regression. You submit your model; we run feature extraction on our cluster
 against preprocessed data (turboprep), then score the returned features.
@@ -14,6 +14,7 @@ models/<your-model>/
   model.yaml        # metadata
   extract.py        # your feature-extraction code (fixed interface, see below)
   weights.txt       # direct-download URL(s) to your checkpoint(s)
+  requirements.txt  # optional; pinned dependencies for your extract.py
 ```
 
 You do **not** upload weights to this repo. Host them yourself and list the
@@ -69,16 +70,30 @@ HTML, not the file). Multi-file checkpoints: one URL per line.
 
 ## The evaluation environment
 
-Your code runs in a shared PyTorch environment on the cluster. Available
-packages include: **torch, torchvision, monai, nibabel, numpy, scipy,
-scikit-learn, pandas, nilearn, einops, SimpleITK, tqdm** and more. If your
-model needs a package not in the environment, note it in your PR and we can
-add it. (Per-submission environments are planned for the future.)
+By default your code runs in a shared PyTorch environment on the cluster.
+Available packages include: **torch, torchvision, monai, nibabel, numpy, scipy,
+scikit-learn, pandas, nilearn, einops, SimpleITK, tqdm** and more.
+
+If your model needs versions that differ from the shared environment, add a
+`requirements.txt` to your submission folder. When present, extraction runs in
+an isolated virtualenv built from that file instead of the shared environment.
+Pin exact versions:
+
+```
+torch==2.4.0
+monai==1.3.0
+```
+
+Prefer packages available in the Alliance wheelhouse; anything else falls back
+to PyPI and slows the first build. The venv is built once per submission,
+reused across datasets, and rebuilt only when `requirements.txt` changes.
 
 ## What happens after you open the PR
 
 1. Automated validation checks your submission is well-formed (yaml parses,
-   `extract.py` defines `extract(...)`, weights URLs resolve).
+   `extract.py` defines `extract(...)`, weights URLs resolve). If you supplied
+   a `requirements.txt`, your `extract.py` is run against a synthetic volume
+   inside an environment built from it.
 2. A maintainer reviews and merges.
 3. On merge, extraction runs on the cluster; the resulting features are scored
    and the leaderboard updates automatically.

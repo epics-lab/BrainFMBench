@@ -1,0 +1,5 @@
+# Optional. Include only if your model needs package versions that differ from
+# the shared cluster environment (PyTorch 2.10, MONAI 1.4, nibabel, numpy,
+# scipy, scikit-learn). Pin exact versions.
+numpy==2.4.2
+nibabel==5.3.2

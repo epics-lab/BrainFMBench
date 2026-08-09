@@ -13,9 +13,11 @@ Every submission must define ONE function with this exact signature:
   weights_dir  : directory holding your downloaded checkpoint file(s)
                  (whatever URLs you list in weights.txt land here)
 
-Your code runs on the cluster inside the shared evaluation environment
-(PyTorch + MONAI + nibabel + numpy + ...). Extract frozen features only:
-load each subject's volume, run your model forward, write the embedding.
+Your code runs on the cluster in an isolated virtualenv built from your
+requirements.txt, if you provide one; otherwise in the shared evaluation
+environment (PyTorch + MONAI + nibabel + numpy + ...). Extract frozen
+features only: load each subject's volume, run your model forward, write
+the embedding.
 
 Replace the body of `embed_one` with your model's forward pass.
 """
