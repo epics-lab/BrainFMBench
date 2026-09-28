@@ -1,4 +1,4 @@
-[![bioRxiv Preprint](https://img.shields.io/badge/bioRxiv-Preprint-b31b1b.svg)](https://www.biorxiv.org/content/10.64898/2026.05.15.725427v4)
+[![MICCAI 2026](https://img.shields.io/badge/MICCAI_2026-MedAGI_Workshop-0b3d91?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](https://nbviewer.org/github/MedAGI2026/medagi2026.github.io/blob/main/src/assets/papers/P3.pdf)
 
 # BrainFMBench
 
