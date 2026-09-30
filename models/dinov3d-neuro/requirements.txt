@@ -1,0 +1,13 @@
+ftfy
+omegaconf
+regex
+scikit-learn
+submitit
+termcolor
+torch
+torchmetrics
+torchvision
+monai==1.4.0
+boto3
+nibabel
+

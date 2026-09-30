@@ -1,0 +1,16 @@
+name: Dinov3D-neuro
+authors:
+  - Asa Gilmore
+  - Ariel Rokem
+submitted_by: Ariel Rokem
+description: Dinov3 trained on FOMO200k (no diffusion)
+preprocessing: turboprep
+embedding_dim: 768
+architecture: 3D ViT-B/16^3
+datasets:
+  - NKI
+  - HBN
+tasks:
+  - sex
+  - age
+  - bmi

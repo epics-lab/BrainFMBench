@@ -1,0 +1,1 @@
+https://huggingface.co/huggingbrain/Dinov3d-Neuro/resolve/main/eval/training_122999/teacher_checkpoint.pth
