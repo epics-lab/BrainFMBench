@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - run: pip install pyyaml
+      - run: pip install pyyaml pandas pyarrow
 
       - name: Set up SSH (key + config + known_hosts)
         env:

@@ -1,0 +1,24 @@
+name: un-CNN
+authors:
+  - Encin, A., Gonzalez Pepe, I., Chatelain, Y., Dickie, E., Glatard, T.
+submitted_by: Encin, Arel
+description: Untrained 3D CNN with frozen random weights (seed 0), multi-block mean and covariance pooling
+preprocessing: turboprep
+embedding_dim: 9664
+architecture: 4-block 3D CNN, depthwise separable blocks 2-4, GroupNorm, 3-channel input (robust scaled, rank filter, Sobel)
+seed: 0
+weightless: true
+cpus: 8
+walltime: "12:00:00"
+citation: >-
+  Encin, A., Gonzalez Pepe, I., Chatelain, Y., Dickie, E., Glatard, T.
+  Untrained Convolutional Neural Networks as Feature Extractors for Structural MRI.
+  bioRxiv 2026.06.07.730652 (2026). https://doi.org/10.64898/2026.06.07.730652
+code: https://github.com/epics-lab/untrained-cnn
+datasets:
+  - NKI
+  - HBN
+tasks:
+  - sex
+  - age
+  - bmi

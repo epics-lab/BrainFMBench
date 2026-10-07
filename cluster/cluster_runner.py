@@ -18,6 +18,7 @@ TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "extract_tem
 CLUSTER_USER = "arelbaha"
 
 SUPPORTED_PREP = {"turboprep", "cat12"}
+MAX_CSV_BYTES = 50_000_000
 
 
 def job_name(slug, dataset):
@@ -32,6 +33,8 @@ def load_submission(model_dir):
         "name": meta.get("name", slug),
         "datasets": meta.get("datasets", []),
         "preprocessing": meta.get("preprocessing", "turboprep"),
+        "cpus": int(meta.get("cpus", 4)),
+        "walltime": str(meta.get("walltime", "3:00:00")),
         "has_extract": os.path.isfile(os.path.join(model_dir, "extract.py")),
         "has_weights": os.path.isfile(os.path.join(model_dir, "weights.txt")),
         "dir": model_dir,
@@ -39,7 +42,8 @@ def load_submission(model_dir):
 
 
 def features_present_in_repo(model_dir, dataset):
-    return os.path.isfile(os.path.join(model_dir, "features", dataset + ".csv"))
+    return any(os.path.isfile(os.path.join(model_dir, "features", dataset + ext))
+               for ext in (".csv", ".parquet"))
 
 
 def download_weights(weights_txt, dest_dir):
@@ -57,14 +61,16 @@ def download_weights(weights_txt, dest_dir):
     return saved
 
 
-def render_template(slug, dataset, workdir, modeldir, input_dir):
+def render_template(slug, dataset, workdir, modeldir, input_dir, cpus=4, walltime="3:00:00"):
     t = open(TEMPLATE).read()
     return (t.replace("__JOBNAME__", job_name(slug, dataset))
              .replace("__MODEL_SLUG__", slug)
              .replace("__DATASET__", dataset)
              .replace("__WORKDIR__", workdir)
              .replace("__MODELDIR__", modeldir)
-             .replace("__INPUT_DIR__", input_dir))
+             .replace("__INPUT_DIR__", input_dir)
+             .replace("__CPUS__", str(cpus))
+             .replace("__WALLTIME__", walltime))
 
 
 def ensure_venv(ssh, sub, modeldir):
@@ -114,7 +120,8 @@ def sow(ssh, sub, dataset):
     os.makedirs(local_stage, exist_ok=True)
     job_sh = os.path.join(local_stage, "job.sh")
     with open(job_sh, "w") as f:
-        f.write(render_template(slug, dataset, workdir, modeldir, input_dir))
+        f.write(render_template(slug, dataset, workdir, modeldir, input_dir,
+                                sub["cpus"], sub["walltime"]))
 
     ssh.run(f"mkdir -p {workdir} {modeldir}/weights")
     ensure_venv(ssh, sub, modeldir)
@@ -139,6 +146,14 @@ def reap(ssh, sub, dataset):
     dest = os.path.join(dest_dir, dataset + ".csv")
     ssh.scp_down(remote_csv, dest)
     print(f"    REAP: pulled {dataset}.csv -> {dest}")
+    if os.path.getsize(dest) > MAX_CSV_BYTES:
+        import pandas as pd
+        df = pd.read_csv(dest)
+        df[df.columns[1:]] = df[df.columns[1:]].astype("float32")
+        pq = dest[:-4] + ".parquet"
+        df.to_parquet(pq, index=False)
+        os.remove(dest)
+        print(f"    REAP: {dataset}.csv over {MAX_CSV_BYTES} bytes -> {pq}")
 
 
 def main():
