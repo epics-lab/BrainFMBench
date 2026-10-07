@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=rrg-glatard
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=__CPUS__
 #SBATCH --mem=32G
-#SBATCH --time=3:00:00
+#SBATCH --time=__WALLTIME__
 #SBATCH --job-name=__JOBNAME__
 #SBATCH --output=__WORKDIR__/extract_%j.out
 

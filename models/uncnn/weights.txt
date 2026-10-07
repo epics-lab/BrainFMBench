@@ -1,0 +1,1 @@
+# un-CNN has no checkpoint: weights are generated from torch.manual_seed(0).
