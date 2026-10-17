@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: score
@@ -67,6 +69,12 @@ jobs:
           done
           python scripts/make_leaderboard.py
 
+      - name: Upload interactive leaderboard
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
       - name: Commit results + leaderboard
         run: |
           git config user.name  "github-actions[bot]"
@@ -81,3 +89,14 @@ jobs:
             sleep 10
           done
           echo "push failed after 3 attempts"; exit 1
+
+  deploy-pages:
+    needs: score
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

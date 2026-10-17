@@ -25,7 +25,7 @@ SEEDS = [0, 1, 2, 3, 42]
 # model display order + exact paper colors
 MODEL_ORDER = [
     "AnatCL (Global)", "AnatCL (Local)", "BrainIAC", "SwinBrain",
-    "3D-Neuro-SimCLR", "FS Schaefer", "FS aparc",
+    "3D-Neuro-SimCLR", "Dinov3D-neuro", "un-CNN", "FS Schaefer", "FS aparc",
 ]
 MODEL_COLORS = {
     "AnatCL (Global)": "#BA68C8",
@@ -33,6 +33,8 @@ MODEL_COLORS = {
     "BrainIAC":        "#E67E22",
     "SwinBrain":       "#1ABC9C",
     "3D-Neuro-SimCLR": "#E91E63",
+    "Dinov3D-neuro":   "#7CB342",
+    "un-CNN":          "#1E88E5",
     "FS Schaefer":     "#959EA7",
     "FS aparc":        "#22282d",
 }
@@ -42,6 +44,8 @@ DISPLAY_NAMES = {
     "BrainIAC":        "BrainIAC",
     "SwinBrain":       "SwinBrain",
     "3D-Neuro-SimCLR": "3D-Neuro\nSimCLR",
+    "Dinov3D-neuro":   "Dinov3D\nneuro",
+    "un-CNN":          "un-CNN",
     "FS Schaefer":     "FS:\nSchaefer",
     "FS aparc":        "FS:\naparc",
 }
@@ -260,6 +264,94 @@ def make_boxplots(table, out_png):
     print(f"Wrote {out_png}")
 
 
+PAGES_URL = "https://epics-lab.github.io/BrainFMBench/"
+
+
+def _box_stats(v):
+    # same quartiles and 1.5 IQR whiskers as matplotlib's boxplot
+    q1, med, q3 = np.percentile(v, [25, 50, 75])
+    iqr = q3 - q1
+    return q1, med, q3, v[v >= q1 - 1.5 * iqr].min(), v[v <= q3 + 1.5 * iqr].max()
+
+
+def make_interactive(table, out_html):
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+
+    order, colors = _order_and_colors(table)
+    ncol = len(DATASETS)
+    fig = make_subplots(rows=len(BOX_ROWS), cols=ncol,
+                        subplot_titles=DATASETS + [""] * ncol * (len(BOX_ROWS) - 1),
+                        horizontal_spacing=0.05, vertical_spacing=0.09)
+    in_legend = set()
+
+    for r, (row_label, task, is_cls, metric_ylabel, box_key, dot_key) in enumerate(BOX_ROWS, 1):
+        for c, ds in enumerate(DATASETS, 1):
+            cats = []
+            for m in order:
+                row = table.get((m, ds), {}).get(task)
+                if not row or not row.get(box_key):
+                    continue
+                lbl = DISPLAY_NAMES.get(m, m).replace("\n", "<br>")
+                cats.append(lbl)
+                rgb = _mcolors.to_rgb(colors[m])
+                fill = "rgba(%d,%d,%d,0.55)" % tuple(int(255 * x) for x in rgb)
+                q1, med, q3, lo, hi = _box_stats(np.asarray(row[box_key], float))
+                fig.add_trace(go.Box(
+                    x=[lbl], q1=[q1], median=[med], q3=[q3], lowerfence=[lo], upperfence=[hi],
+                    name=m, legendgroup=m, showlegend=m not in in_legend,
+                    fillcolor=fill, line=dict(color=colors[m], width=1.5),
+                ), row=r, col=c)
+                in_legend.add(m)
+
+                hvals = row.get(dot_key) or []
+                if hvals:
+                    fig.add_trace(go.Box(
+                        x=[lbl] * len(hvals), y=hvals, name=m, legendgroup=m, showlegend=False,
+                        boxpoints="all", jitter=0.5, pointpos=0, hoveron="points",
+                        fillcolor="rgba(0,0,0,0)", line=dict(color="rgba(0,0,0,0)"),
+                        marker=dict(color=colors[m], size=8, line=dict(color="black", width=1)),
+                        text=[f"seed {s}" for s in SEEDS[:len(hvals)]],
+                        hovertemplate=f"<b>{m}</b><br>held out test, %{{text}}<br>"
+                                      f"{metric_ylabel}: %{{y:.3f}}<extra></extra>",
+                    ), row=r, col=c)
+
+            fig.update_xaxes(categoryorder="array", categoryarray=cats, row=r, col=c)
+            bv = dummy_baseline(ds, task, is_cls)
+            if bv is not None and np.isfinite(bv):
+                fig.add_hline(y=bv, line=dict(color="#AAAAAA", dash="dot", width=2), row=r, col=c)
+            if c == 1:
+                fig.update_yaxes(title_text=f"<b>{row_label}</b><br>{metric_ylabel}", row=r, col=c)
+            elif is_cls:
+                first = (r - 1) * ncol + 1
+                fig.update_yaxes(matches="y" if first == 1 else f"y{first}", row=r, col=c)
+
+    fig.update_annotations(font_size=20)
+    fig.update_layout(
+        template="plotly_white", boxmode="overlay", height=430 * len(BOX_ROWS),
+        title=dict(text="BrainFMBench leaderboard<br><sup>Boxes: 5 fold CV over 5 seeds. "
+                        "Points: held out test per seed. Dotted line: chance or dummy baseline. "
+                        "Click legend entries to hide or show models.</sup>"),
+        legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.06, yanchor="top"),
+        margin=dict(l=90, r=20, t=110, b=60),
+    )
+
+    plot = fig.to_html(full_html=False, include_plotlyjs="cdn",
+                       config={"responsive": True, "displaylogo": False})
+    os.makedirs(os.path.dirname(out_html), exist_ok=True)
+    with open(out_html, "w") as f:
+        f.write(
+            "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
+            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+            "<title>BrainFMBench Leaderboard</title>"
+            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px}</style>"
+            "</head><body>\n"
+            "<p><a href=\"https://github.com/epics-lab/BrainFMBench\">epics-lab/BrainFMBench</a>"
+            " &middot; auto generated from <code>models/*/results.json</code></p>\n"
+            + plot + "\n</body></html>\n")
+    print(f"Wrote {out_html}")
+
+
 def main():
     rows = load_rows()
     table = {}
@@ -287,6 +379,12 @@ def main():
         print(f"figure generation failed: {e}")
         fig_ok = False
 
+    try:
+        make_interactive(table, os.path.join(REPO, "site", "index.html"))
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        print(f"interactive figure failed: {e}")
+
     lines = [
         "# BrainFMBench Leaderboard", "",
         "Downstream probing of frozen features (RandomForest, held-out test).",
@@ -294,9 +392,10 @@ def main():
     ]
     if fig_ok:
         lines += [
-            "![Leaderboard boxplots](leaderboard_boxplots.png)", "",
+            f"[![Leaderboard boxplots](leaderboard_boxplots.png)]({PAGES_URL})", "",
             "_Boxes show 5-fold cross-validation across 5 seeds (25 values); "
             "overlaid points show held-out test results for the same 5 seeds._", "",
+            f"**[Interactive version]({PAGES_URL})**", "",
         ]
     lines += [
         "| Model | Dataset | Sex (acc) | Age (MAE) | BMI (MAE) |",
@@ -316,7 +415,8 @@ def main():
     if os.path.isfile(readme):
         blk = ["<!-- LEADERBOARD:START -->", ""]
         if fig_ok:
-            blk += ["![Leaderboard boxplots](leaderboard_boxplots.png)", ""]
+            blk += [f"[![Leaderboard boxplots](leaderboard_boxplots.png)]({PAGES_URL})", "",
+                    f"**[Interactive version]({PAGES_URL})**", ""]
         blk += ["| Model | Dataset | Sex (acc) | Age (MAE) | BMI (MAE) |",
                 "|-------|---------|-----------|-----------|-----------|"]
         for d in display:

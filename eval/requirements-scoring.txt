@@ -4,3 +4,4 @@ pandas==2.2.3
 pyyaml==6.0.2
 matplotlib==3.9.2
 pyarrow==21.0.0
+plotly==7.1.0
