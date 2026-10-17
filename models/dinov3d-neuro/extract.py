@@ -11,18 +11,53 @@ import glob
 import numpy as np
 import nibabel as nib
 import torch
+import torch.nn.functional as F
 
 DINOV3D_SRC = "/home/arelbaha/links/scratch/dinov3d_git"
 PATCH = 16
+DO_RESAMPLE = False
+
+def resample_1mm(t, zooms):
+    # Matches monai Spacingd(pixdim=1, mode="bilinear", padding_mode="border"):
+    in_shape = t.shape[2:]
+    out_shape = [int(np.floor((n - 1) * z + 1e-6)) + 1 for n, z in zip(in_shape, zooms)]
+    axes = [torch.arange(m, dtype=torch.float64) / z / (n - 1) * 2 - 1
+            for m, n, z in zip(out_shape, in_shape, zooms)]
+    gx, gy, gz = torch.meshgrid(*axes, indexing="ij")
+    grid = torch.stack([gz, gy, gx], dim=-1)[None].float()  # grid_sample wants (W, H, D) order
+    return F.grid_sample(t, grid, mode="bilinear", padding_mode="border", align_corners=True)
 
 
 def load_volume(path):
-    v = nib.load(path).get_fdata().astype(np.float32)
-    brain = v > v.min()
-    v[brain] = (v[brain] - v[brain].mean()) / (v[brain].std() + 1e-8)
-    v[~brain] = v[brain].min()
-    v = np.pad(v, [(0, (-s) % PATCH) for s in v.shape], constant_values=v.min())
-    return torch.from_numpy(v)[None, None]
+    img = nib.load(path)
+    v = img.get_fdata(dtype=np.float32)
+
+    # SignalFillEmptyd equiv
+    v = np.nan_to_num(v, nan=0.0)
+
+    # NormalizeIntensityd equiv
+    for s in v:
+        m = s != 0
+        if m.any():
+            x = s[m]
+            sd = x.std()
+            s[m] = (x - x.mean()) / (sd if sd != 0 else 1.0)
+
+    t = torch.from_numpy(v)[None, None]
+
+    if DO_RESAMPLE:
+        zooms = np.asarray(img.header.get_zooms()[:3], dtype=np.float64)
+        if not np.allclose(zooms, 1.0):
+            t = resample_1mm(t, zooms)
+
+    # Pad with 0 now after z-score
+    # This is done symmetrically like monai
+    pads = []
+    for n in reversed(t.shape[2:]):
+        p = (-n) % PATCH
+        pads += [p // 2, p - p // 2]
+    return F.pad(t, pads, value=0.0)
+
 
 
 def extract(input_dir, output_csv, weights_dir):
