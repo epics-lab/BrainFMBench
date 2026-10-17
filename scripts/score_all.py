@@ -8,7 +8,7 @@ Convention:
   labels/<DS>.csv                  # shared labels for dataset DS
 
 Usage:
-  python scripts/score_all.py models/defaultuncnn3d
+  python scripts/score_all.py models/uncnn
 """
 import json
 import os

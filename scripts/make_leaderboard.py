@@ -288,7 +288,7 @@ def main():
         fig_ok = False
 
     lines = [
-        "# OpenMRIBench Leaderboard", "",
+        "# BrainFMBench Leaderboard", "",
         "Downstream probing of frozen features (RandomForest, held-out test).",
         "Sex = balanced accuracy (higher is better); Age / BMI = MAE (lower is better).", "",
     ]
