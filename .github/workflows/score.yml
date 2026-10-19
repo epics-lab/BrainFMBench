@@ -5,6 +5,11 @@ on:
     branches: [main]
     paths: ["models/**", "labels/**", "eval/**", "scripts/**"]
   workflow_dispatch:
+    inputs:
+      rescore_all:
+        description: "Rescore every model (about 5 hours). Leave off to only rebuild the leaderboard and site."
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -35,7 +40,8 @@ jobs:
         id: scope
         run: |
           if [ "${{ github.event_name }}" != "push" ]; then
-            echo "all=true" >> "$GITHUB_OUTPUT"; exit 0
+            echo "all=${{ inputs.rescore_all }}" >> "$GITHUB_OUTPUT"
+            echo "slugs=" >> "$GITHUB_OUTPUT"; exit 0
           fi
           BEFORE="${{ github.event.before }}"
           if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
@@ -44,7 +50,7 @@ jobs:
             exit 0
           fi
           CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}" 2>/dev/null || true)
-          if [ -z "$CHANGED" ] || echo "$CHANGED" | grep -qE '^(eval/|labels/|scripts/)'; then
+          if [ -z "$CHANGED" ] || echo "$CHANGED" | grep -qE '^(eval/scorer\.py|labels/|scripts/score_all\.py)'; then
             echo "all=true" >> "$GITHUB_OUTPUT"
           else
             SLUGS=$(echo "$CHANGED" | grep '^models/' | cut -d/ -f2 | sort -u | tr '\n' ' ')
