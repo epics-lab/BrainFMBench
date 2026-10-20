@@ -49,8 +49,8 @@ features (5-fold CV across 5 seeds for the box, held-out test for the points).
 Models are evaluated on two datasets from the [Reproducible Brain Charts](https://reprobrainchart.github.io) (RBC)
 initiative:
 
-- **NKI** — Nathan Kline Institute Rockland Sample (~958 subjects)
-- **HBN** — Healthy Brain Network (~1000 subjects)
+- **NKI** — Nathan Kline Institute Rockland Sample (958 subjects)
+- **HBN** — Healthy Brain Network (997 subjects)
 
 Models are evaluated across three tasks: **sex** classification (balanced accuracy) and **age** / **BMI**
 regression (mean absolute error). Preprocessing is [turboprep](https://github.com/LemuelPuglisi/turboprep) by default, with

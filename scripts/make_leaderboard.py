@@ -264,7 +264,7 @@ def make_boxplots(table, out_png):
     print(f"Wrote {out_png}")
 
 
-PAGES_URL = "https://epics-lab.github.io/BrainFMBench/"
+PAGES_URL = "https://www.epics-lab.ca/BrainFMBench/"
 
 
 def _box_stats(v):
