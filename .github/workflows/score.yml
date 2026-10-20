@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       rescore_all:
-        description: "Rescore every model (about 5 hours). Leave off to only rebuild the leaderboard and site."
+        description: "Rescore every model. Leave off to only rebuild the leaderboard and site."
         type: boolean
         default: false
 
@@ -21,20 +21,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  score:
+  plan:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      any: ${{ steps.matrix.outputs.any }}
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: true
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - run: pip install -r eval/requirements-scoring.txt
+      - run: pip install pyyaml==6.0.2
 
       - name: Determine scope
         id: scope
@@ -58,22 +59,82 @@ jobs:
             echo "slugs=$SLUGS" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Score
+      - name: Build matrix
+        id: matrix
+        env:
+          ALL: ${{ steps.scope.outputs.all }}
+          SLUGS: ${{ steps.scope.outputs.slugs }}
         run: |
-          if [ "${{ steps.scope.outputs.all }}" = "true" ]; then
-            TARGETS=$(ls -d models/*/)
-          else
-            TARGETS=""
-            for s in ${{ steps.scope.outputs.slugs }}; do
-              [ -d "models/$s" ] && TARGETS="$TARGETS models/$s"
-            done
-          fi
-          echo "scoring: ${TARGETS:-nothing}"
-          for d in $TARGETS; do
-            echo "=== $d ==="
-            python scripts/score_all.py "$d"
-          done
-          python scripts/make_leaderboard.py
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import glob, json, os, yaml
+          if os.environ["ALL"] == "true":
+              models = sorted(os.path.basename(d.rstrip("/")) for d in glob.glob("models/*/"))
+          else:
+              models = [s for s in os.environ["SLUGS"].split() if os.path.isfile(f"models/{s}/model.yaml")]
+          include = []
+          for m in models:
+              meta = yaml.safe_load(open(f"models/{m}/model.yaml"))
+              for ds in meta.get("datasets", []):
+                  for task in meta.get("tasks", []):
+                      include.append({"model": m, "dataset": ds, "task": task})
+          print("matrix=" + json.dumps({"include": include}))
+          print("any=" + ("true" if include else "false"))
+          PY
+          cat "$GITHUB_OUTPUT"
+
+  score:
+    needs: plan
+    if: needs.plan.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    name: score ${{ matrix.model }} ${{ matrix.dataset }} ${{ matrix.task }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r eval/requirements-scoring.txt
+
+      - run: python scripts/score_all.py models/${{ matrix.model }} ${{ matrix.dataset }} ${{ matrix.task }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part__${{ matrix.model }}__${{ matrix.dataset }}__${{ matrix.task }}
+          path: models/${{ matrix.model }}/results.${{ matrix.dataset }}.${{ matrix.task }}.json
+          retention-days: 1
+          if-no-files-found: error
+
+  leaderboard:
+    needs: [plan, score]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.score.result == 'success' || needs.score.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r eval/requirements-scoring.txt
+
+      - if: needs.score.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: part__*
+          path: parts
+
+      - if: needs.score.result == 'success'
+        run: python scripts/merge_results.py parts
+
+      - run: python scripts/make_leaderboard.py
 
       - name: Upload interactive leaderboard
         if: github.ref == 'refs/heads/main'
@@ -97,7 +158,7 @@ jobs:
           echo "push failed after 3 attempts"; exit 1
 
   deploy-pages:
-    needs: score
+    needs: leaderboard
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:

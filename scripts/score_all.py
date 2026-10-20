@@ -9,6 +9,7 @@ Convention:
 
 Usage:
   python scripts/score_all.py models/uncnn
+  python scripts/score_all.py models/uncnn HBN age   # one pair -> results.HBN.age.json
 """
 import json
 import os
@@ -30,10 +31,11 @@ def find_features(model_dir, dataset):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("usage: score_all.py <model_dir>")
+    if len(sys.argv) not in (2, 4):
+        print("usage: score_all.py <model_dir> [<dataset> <task>]")
         return 2
     model_dir = sys.argv[1].rstrip("/")
+    only = sys.argv[2:4]
 
     meta = yaml.safe_load(open(os.path.join(model_dir, "model.yaml")))
     name = meta.get("name", os.path.basename(model_dir))
@@ -46,6 +48,11 @@ def main():
     if bad:
         print(f"unknown task(s) {bad}; allowed: {list(TASK_TYPE)}")
         return 1
+    if only:
+        if only[0] not in datasets or only[1] not in tasks:
+            print(f"{only[0]}/{only[1]} is not declared in {model_dir}/model.yaml")
+            return 1
+        datasets, tasks = [only[0]], [only[1]]
 
     rows, failures = [], []
     for ds in datasets:
@@ -66,7 +73,7 @@ def main():
     print("\n==== RESULTS ====")
     for r in rows:
         print(json.dumps(r))
-    out = os.path.join(model_dir, "results.json")
+    out = os.path.join(model_dir, "results.%s.%s.json" % tuple(only) if only else "results.json")
     json.dump(rows, open(out, "w"), indent=2)
     print(f"\nWrote {out}  ({len(rows)} rows)")
 
