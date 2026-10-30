@@ -11,17 +11,36 @@ import glob
 import numpy as np
 import nibabel as nib
 import torch
+import torch.nn.functional as F
 
 DINOV3D_SRC = "/home/arelbaha/links/scratch/dinov3d_git"
 PATCH = 16
+DO_RESAMPLE = False
+
+def resample_1mm(t, zooms):
+    # Matches monai Spacingd(pixdim=1, mode="bilinear", padding_mode="border"):
+    in_shape = t.shape[2:]
+    out_shape = [int(np.floor((n - 1) * z + 1e-6)) + 1 for n, z in zip(in_shape, zooms)]
+    axes = [torch.arange(m, dtype=torch.float64) / z / (n - 1) * 2 - 1
+            for m, n, z in zip(out_shape, in_shape, zooms)]
+    gx, gy, gz = torch.meshgrid(*axes, indexing="ij")
+    grid = torch.stack([gz, gy, gx], dim=-1)[None].float()  # grid_sample wants (W, H, D) order
+    return F.grid_sample(t, grid, mode="bilinear", padding_mode="border", align_corners=True)
+
+
+EPS = 1e-6
 
 
 def load_volume(path):
-    v = nib.load(path).get_fdata().astype(np.float32)
-    brain = v > v.min()
-    v[brain] = (v[brain] - v[brain].mean()) / (v[brain].std() + 1e-8)
-    v[~brain] = v[brain].min()
-    v = np.pad(v, [(0, (-s) % PATCH) for s in v.shape], constant_values=v.min())
+    img = nib.load(path)
+    assert np.allclose(img.header.get_zooms()[:3], 1.0, atol=1e-3), f"{path} is not 1mm isotropic"
+    v = np.nan_to_num(img.get_fdata().astype(np.float32), nan=0.0)
+    brain = v > v.min() + EPS
+    v[~brain] = 0.0
+    x = v[brain]
+    v[brain] = (x - x.mean()) / (x.std() + EPS)
+    pad = [(-n) % PATCH for n in v.shape]
+    v = np.pad(v, [(q // 2, q - q // 2) for q in pad])
     return torch.from_numpy(v)[None, None]
 
 
