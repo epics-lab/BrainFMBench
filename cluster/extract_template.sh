@@ -60,6 +60,32 @@ flock -u 200
 
 echo "[env] python: $(which python)"
 
+# Optional preprocess.py: preprocess(raw_dir, out_dir), cached per dataset.
+PREP_PY="$MODELDIR/preprocess.py"
+if [ -f "$PREP_PY" ]; then
+    PREP_DIR="$WORKDIR/preprocessed"
+    PREP_HASH="$(sha256sum "$PREP_PY" | cut -d' ' -f1)"
+    if [ "$(cat "$PREP_DIR/preprocess.done" 2>/dev/null)" != "$PREP_HASH" ]; then
+        echo "[$(date)] preprocess start: $INPUT_DIR -> $PREP_DIR"
+        rm -rf "$PREP_DIR"; mkdir -p "$PREP_DIR"
+        python - "$INPUT_DIR" "$PREP_DIR" "$PREP_PY" <<'PYEOT'
+import sys, importlib.util
+raw_dir, out_dir, prep_py = sys.argv[1:4]
+spec = importlib.util.spec_from_file_location("submission_preprocess", prep_py)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+if not hasattr(mod, "preprocess"):
+    raise SystemExit("submission preprocess.py must define preprocess(raw_dir, out_dir)")
+mod.preprocess(raw_dir, out_dir)
+PYEOT
+        echo "$PREP_HASH" > "$PREP_DIR/preprocess.done"
+        echo "[$(date)] preprocess done"
+    else
+        echo "[prep] reusing $PREP_DIR (preprocess.py unchanged)"
+    fi
+    INPUT_DIR="$PREP_DIR"
+fi
+
 python - "$INPUT_DIR" "$OUT_CSV" "$WEIGHTS_DIR" "$EXTRACT_PY" <<'PYEOT'
 import sys, importlib.util
 input_dir, output_csv, weights_dir, extract_py = sys.argv[1:5]

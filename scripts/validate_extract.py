@@ -83,9 +83,26 @@ def check_extract_runs(model_dir, meta):
     for sid in ["SUB01", "SUB02"]:
         sd = os.path.join(idir, sid); os.makedirs(sd)
         vol = (np.random.rand(16, 16, 16) * 100).astype(np.float32)
-        nib.save(nib.Nifti1Image(vol, np.eye(4)), os.path.join(sd, "normalized.nii.gz"))
+        fname = "T1w.nii.gz" if meta.get("preprocessing") == "raw" else "normalized.nii.gz"
+        nib.save(nib.Nifti1Image(vol, np.eye(4)), os.path.join(sd, fname))
     out = os.path.join(tmp, "out.csv")
     wdir = os.path.join(tmp, "weights"); os.makedirs(wdir)
+    prep_py = os.path.join(model_dir, "preprocess.py")
+    if os.path.isfile(prep_py):
+        pspec = importlib.util.spec_from_file_location("sub_preprocess", prep_py)
+        pmod = importlib.util.module_from_spec(pspec)
+        try:
+            pspec.loader.exec_module(pmod)
+        except Exception as e:
+            return fail(f"preprocess.py failed to import: {e}")
+        if not hasattr(pmod, "preprocess") or len(inspect.signature(pmod.preprocess).parameters) != 2:
+            return fail("preprocess.py must define preprocess(raw_dir, out_dir)")
+        pdir = os.path.join(tmp, "preprocessed"); os.makedirs(pdir)
+        try:
+            pmod.preprocess(idir, pdir)
+        except Exception as e:
+            return fail(f"preprocess() raised on synthetic input: {e}")
+        idir = pdir
     try:
         mod.extract(idir, out, wdir)
     except Exception as e:

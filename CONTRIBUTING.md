@@ -34,6 +34,25 @@ def extract(input_dir, output_csv, weights_dir):
 - **`input_dir`** — a directory of preprocessed volumes, one folder per subject:
   `<input_dir>/<subject_id>/normalized.nii.gz`. (This is turboprep output;
   `cat12` is also available if you set `preprocessing: cat12`.)
+
+  **Your own preprocessing.** Set `preprocessing: raw` to receive the
+  unprocessed T1 instead: `<raw_dir>/<subject_id>/T1w.nii.gz`. Scans come
+  straight from the scanner, so shapes and voxel sizes vary by site
+  (e.g. 1 mm or 0.8 mm). Add a `preprocess.py` next to `extract.py`:
+
+  ```python
+  def preprocess(raw_dir, out_dir):
+      # read  <raw_dir>/<subject_id>/T1w.nii.gz
+      # write <out_dir>/<subject_id>/<any files your extract.py reads>
+  ```
+
+  It runs once per dataset before `extract`, and `extract` then receives
+  `out_dir` as its `input_dir`. The output is cached and only rebuilt when
+  `preprocess.py` changes. Without `preprocess.py`, `extract` receives the
+  raw folder directly. Set `walltime` in `model.yaml` to cover preprocessing,
+  and list any tools beyond pip packages (ANTs, FSL, ...) in your PR.
+  If preprocessing cannot run on the validator's tiny random test volume,
+  set `cluster_only: true`.
 - **`weights_dir`** — a directory containing the checkpoint file(s) downloaded
   from your `weights.txt`.
 - **`output_csv`** — write features here as `subject_id,f0,f1,...,fN`,
@@ -50,7 +69,7 @@ authors:
   - Lastname, F., et al.
 submitted_by: Your Name
 description: one-line description
-preprocessing: turboprep        # turboprep (default) or cat12
+preprocessing: turboprep        # turboprep (default), cat12, or raw
 embedding_dim: 768              # your feature dimension
 architecture: short description
 datasets: [NKI, HBN]

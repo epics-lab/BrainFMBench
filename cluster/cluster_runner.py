@@ -17,7 +17,7 @@ CLUSTER_DATA = "/home/arelbaha/links/scratch/OpenMRIdatasets"           # unifor
 TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "extract_template.sh")
 CLUSTER_USER = "arelbaha"
 
-SUPPORTED_PREP = {"turboprep", "cat12"}
+SUPPORTED_PREP = {"turboprep", "cat12", "raw"}
 MAX_CSV_BYTES = 50_000_000
 
 
@@ -127,6 +127,11 @@ def sow(ssh, sub, dataset):
     ensure_venv(ssh, sub, modeldir)
     stage_weights(ssh, sub, modeldir)
     ssh.scp_up(os.path.join(sub["dir"], "extract.py"), f"{modeldir}/extract.py")
+    prep_local = os.path.join(sub["dir"], "preprocess.py")
+    if os.path.isfile(prep_local):
+        ssh.scp_up(prep_local, f"{modeldir}/preprocess.py")
+    else:
+        ssh.run(f"rm -f {modeldir}/preprocess.py", check=False)
     ssh.scp_up(job_sh, f"{workdir}/job.sh")
 
     rc, out, err = ssh.run(f"sbatch --chdir={workdir} {workdir}/job.sh", check=False)
