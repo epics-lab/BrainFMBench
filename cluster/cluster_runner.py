@@ -35,6 +35,9 @@ def load_submission(model_dir):
         "preprocessing": meta.get("preprocessing", "turboprep"),
         "cpus": int(meta.get("cpus", 4)),
         "walltime": str(meta.get("walltime", "3:00:00")),
+        "gpus": int(meta.get("gpus", 0)),
+        "venv_prestaged": bool(meta.get("venv_prestaged", False)),
+        "weights_prestaged": bool(meta.get("weights_prestaged", False)),
         "has_extract": os.path.isfile(os.path.join(model_dir, "extract.py")),
         "has_weights": os.path.isfile(os.path.join(model_dir, "weights.txt")),
         "dir": model_dir,
@@ -61,7 +64,7 @@ def download_weights(weights_txt, dest_dir):
     return saved
 
 
-def render_template(slug, dataset, workdir, modeldir, input_dir, cpus=4, walltime="3:00:00"):
+def render_template(slug, dataset, workdir, modeldir, input_dir, cpus=4, walltime="3:00:00", gpus=0):
     t = open(TEMPLATE).read()
     return (t.replace("__JOBNAME__", job_name(slug, dataset))
              .replace("__MODEL_SLUG__", slug)
@@ -70,7 +73,9 @@ def render_template(slug, dataset, workdir, modeldir, input_dir, cpus=4, walltim
              .replace("__MODELDIR__", modeldir)
              .replace("__INPUT_DIR__", input_dir)
              .replace("__CPUS__", str(cpus))
-             .replace("__WALLTIME__", walltime))
+             .replace("__WALLTIME__", walltime)
+             .replace("__ACCOUNT__", "def-glatard_gpu" if gpus else "rrg-glatard")
+             .replace("__GPU_LINE__", f"#SBATCH --gpus-per-node={gpus}" if gpus else ""))
 
 
 def ensure_venv(ssh, sub, modeldir):
@@ -78,6 +83,9 @@ def ensure_venv(ssh, sub, modeldir):
 
     The robot account's whitelist permits no shell chaining, so the build
     cannot run here."""
+    if sub.get("venv_prestaged"):
+        print("    ENV: venv_prestaged -> using the venv already on the cluster")
+        return
     reqs_local = os.path.join(sub["dir"], "requirements.txt")
 
     if not os.path.isfile(reqs_local):
@@ -97,6 +105,8 @@ def stage_weights(ssh, sub, modeldir):
         print("    WEIGHTS: already staged, skipping download")
         return
 
+    if sub.get("weights_prestaged"):
+        raise SystemExit(f"weights_prestaged but {modeldir}/weights is empty: stage them by hand first")
     local_wdir = os.path.join("/tmp", f"ombench_{sub['slug']}_weights")
     os.makedirs(local_wdir, exist_ok=True)
     download_weights(os.path.join(sub["dir"], "weights.txt"), local_wdir)
@@ -121,7 +131,7 @@ def sow(ssh, sub, dataset):
     job_sh = os.path.join(local_stage, "job.sh")
     with open(job_sh, "w") as f:
         f.write(render_template(slug, dataset, workdir, modeldir, input_dir,
-                                sub["cpus"], sub["walltime"]))
+                                sub["cpus"], sub["walltime"], sub["gpus"]))
 
     ssh.run(f"mkdir -p {workdir} {modeldir}/weights")
     ensure_venv(ssh, sub, modeldir)
@@ -132,6 +142,20 @@ def sow(ssh, sub, dataset):
         ssh.scp_up(prep_local, f"{modeldir}/preprocess.py")
     else:
         ssh.run(f"rm -f {modeldir}/preprocess.py", check=False)
+    skip = {"extract.py", "preprocess.py", "weights.txt", "requirements.txt", "model.yaml", "results.json"}
+    for root, dirs, files in os.walk(sub["dir"]):
+        dirs[:] = [d for d in dirs if d not in ("features", "__pycache__")]
+        rel = os.path.relpath(root, sub["dir"])
+        for fn in files:
+            if rel == "." and fn in skip:
+                continue
+            src = os.path.join(root, fn)
+            if os.path.islink(src) or not os.path.realpath(src).startswith(os.path.realpath(sub["dir"]) + os.sep):
+                print(f"    SKIP upload (symlink or outside model dir): {src}")
+                continue
+            dest = f"{modeldir}/{fn}" if rel == "." else f"{modeldir}/{rel}/{fn}"
+            ssh.run(f"mkdir -p {os.path.dirname(dest)}")
+            ssh.scp_up(src, dest)
     ssh.scp_up(job_sh, f"{workdir}/job.sh")
 
     rc, out, err = ssh.run(f"sbatch --chdir={workdir} {workdir}/job.sh", check=False)

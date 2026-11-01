@@ -51,7 +51,7 @@ def check_weights(model_dir, meta=None):
     urls = [l.strip() for l in open(p) if l.strip() and not l.startswith("#")]
     if not urls:
         # allowed only for the example (no real weights); real submissions need >=1
-        if os.path.basename(model_dir) == "example-submission" or (meta or {}).get("weightless"):
+        if os.path.basename(model_dir) == "example-submission" or (meta or {}).get("weightless") or (meta or {}).get("weights_prestaged"):
             return True
         return fail("weights.txt lists no URLs")
     for u in urls:
