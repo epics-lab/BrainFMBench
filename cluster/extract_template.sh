@@ -1,5 +1,6 @@
 #!/bin/bash
-#SBATCH --account=rrg-glatard
+#SBATCH --account=__ACCOUNT__
+__GPU_LINE__
 #SBATCH --cpus-per-task=__CPUS__
 #SBATCH --mem=32G
 #SBATCH --time=__WALLTIME__
@@ -53,7 +54,12 @@ if [ -f "$REQS" ]; then
         source "$VENV/bin/activate"
     fi
 else
-    echo "[env] no requirements.txt -- using shared module environment"
+    if [ -d "$VENV" ]; then
+        echo "[env] no requirements.txt -- using prestaged venv"
+        source "$VENV/bin/activate"
+    else
+        echo "[env] no requirements.txt -- using shared module environment"
+    fi
 fi
 
 flock -u 200
