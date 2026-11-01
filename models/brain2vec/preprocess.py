@@ -24,8 +24,10 @@ def preprocess(raw_dir, out_dir):
             dst.symlink_to(src.resolve())
 
     device = "cuda" if os.environ.get("CUDA_VISIBLE_DEVICES") else "cpu"
+    prep_bin = str(Path(NICHART).parent)  # NiChart calls DLICV and DLMUSE by name
+    env = {**os.environ, "PATH": prep_bin + os.pathsep + os.environ.get("PATH", "")}
     subprocess.run([NICHART, "-i", str(flat), "-o", str(out / "nichart"), "-d", device, "--refaced-data"],
-                   check=True)
+                   check=True, env=env)
 
     masked = out / "nichart" / "temp_working_dir" / "s3_masked"
     aligned = out / "brain2vec_aligned_scans"
