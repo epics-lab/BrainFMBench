@@ -13,6 +13,7 @@ preprocessing: raw
 embedding_dim: 768
 cluster_only: true
 weights_prestaged: true
+venv_prestaged: true
 gpus: 1
 cpus: 8
 walltime: "8:00:00"
