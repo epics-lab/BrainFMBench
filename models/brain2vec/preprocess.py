@@ -5,6 +5,7 @@ NiChart_DLMUSE runs from its own venv (venv_prep next to this file) because it n
 import os
 import shutil
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -32,9 +33,13 @@ def preprocess(raw_dir, out_dir):
     masked = out / "nichart" / "temp_working_dir" / "s3_masked"
     aligned = out / "brain2vec_aligned_scans"
     aligned.mkdir(exist_ok=True)
-    for img in sorted(masked.glob("*.nii.gz")):
+    def register(img):
         sid = img.name.split("_")[0].replace(".nii.gz", "")
         subprocess.run(["bash", "-lc", f'{FSL}; FSLOUTPUTTYPE=NIFTI_GZ flirt -in "{img}" -ref "{TEMPLATE}" '
                                        f'-out "{aligned / (sid + ".nii.gz")}"'], check=True)
+
+    workers = int(os.environ.get("SLURM_CPUS_PER_TASK", "4"))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(register, sorted(masked.glob("*.nii.gz"))))
     shutil.rmtree(out / "nichart" / "temp_working_dir", ignore_errors=True)
     shutil.rmtree(flat, ignore_errors=True)

@@ -38,6 +38,8 @@ def extract(input_dir, output_csv, weights_dir):
             for name, vec in zip(mrids, feats[:, 0, :].float().cpu()):
                 sid = name[:-7] if name.endswith(".nii.gz") else name
                 rows.append((sid, vec.tolist()))
+    if not rows:
+        raise SystemExit(f"no .nii.gz scans found in {in_dir}")
     rows.sort()
 
     os.makedirs(os.path.dirname(output_csv) or ".", exist_ok=True)
