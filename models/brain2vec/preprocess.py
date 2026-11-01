@@ -3,6 +3,7 @@
 NiChart_DLMUSE runs from its own venv (venv_prep next to this file) because it needs torch<=2.2.1.
 """
 import os
+import shlex
 import shutil
 import subprocess
 from concurrent.futures import ThreadPoolExecutor
@@ -35,8 +36,9 @@ def preprocess(raw_dir, out_dir):
     aligned.mkdir(exist_ok=True)
     def register(img):
         sid = img.name.split("_")[0].replace(".nii.gz", "")
-        subprocess.run(["bash", "-lc", f'{FSL}; FSLOUTPUTTYPE=NIFTI_GZ flirt -in "{img}" -ref "{TEMPLATE}" '
-                                       f'-out "{aligned / (sid + ".nii.gz")}"'], check=True)
+        cmd = (f"{FSL}; FSLOUTPUTTYPE=NIFTI_GZ flirt -in {shlex.quote(str(img))} "
+               f"-ref {shlex.quote(str(TEMPLATE))} -out {shlex.quote(str(aligned / (sid + '.nii.gz')))}")
+        subprocess.run(["bash", "-lc", cmd], check=True)
 
     workers = int(os.environ.get("SLURM_CPUS_PER_TASK", "4"))
     with ThreadPoolExecutor(max_workers=workers) as pool:
