@@ -1,0 +1,5 @@
+In order to gain access, you need to submit an application on our huggingface model card.
+If you have a hugging face account on your cluster, I can manually grant access to this account.
+Weights are installed automatically from extract.py and they are in safetensors format.
+
+https://huggingface.co/cbica/Brain2Vec/blob/main/brain2vec.safetensors

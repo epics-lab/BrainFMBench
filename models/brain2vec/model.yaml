@@ -1,0 +1,23 @@
+name: Brain2Vec
+authors:
+  - Maggioros, S.
+  - Erus, G.
+  - Harman, G.
+  - Aidinis, G.
+  - Getka, A.
+  - Sotiras, A.
+  - Davatzikos, C.
+submitted_by: Spiros Maggioros
+description: A Self-Supervised 3D Foundation Model for Structural Brain MRI
+preprocessing: raw
+embedding_dim: 768
+architecture: A 3D masked autoencoder with a 12 layer ViT encoder and an 8 layerr ViT decoder. Embeddings are computed using the [CLS] token from the last encoder's head.
+code: https://github.com/CBICA/Brain2Vec
+weights: https://huggingface.co/cbica/Brain2Vec
+datasets:
+  - NKI
+  - HBN
+tasks:
+  - sex
+  - age
+  - bmi
