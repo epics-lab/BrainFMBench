@@ -34,7 +34,7 @@ def preprocess(raw_dir: str, out_dir: str) -> None:
             "-o",
             str(out_dir),
             "-d",
-            "cpu",
+            "cuda",
             "--refaced-data",
         ],
         check=True,
