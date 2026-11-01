@@ -1,0 +1,2 @@
+# Gated weights: request access on the Brain2Vec Hugging Face model card (see model.yaml).
+# Staged on the cluster by the maintainers; no public download URL.
