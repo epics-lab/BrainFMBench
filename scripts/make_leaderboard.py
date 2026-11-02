@@ -431,7 +431,7 @@ def main():
             c = c.split(a)[0] + blk_text + c.split(b)[1]
             open(readme, "w").write(c)
             print(f"Injected leaderboard into {readme}")
-            import glob, os, re
+            import glob, re
             root = os.path.dirname(os.path.abspath(readme))
             n = len(glob.glob(os.path.join(root, "models", "*", "results.json")))
             c2 = re.sub(r"_Models-\d+-", f"_Models-{n}-", c)
