@@ -159,7 +159,7 @@ jobs:
 
   deploy-pages:
     needs: leaderboard
-    if: github.ref == 'refs/heads/main'
+    if: ${{ !cancelled() && needs.leaderboard.result == 'success' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
