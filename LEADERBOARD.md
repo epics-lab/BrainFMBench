@@ -3,7 +3,7 @@
 Downstream probing of frozen features (RandomForest, held-out test).
 Sex = balanced accuracy (higher is better); Age / BMI = MAE (lower is better).
 
-[![Leaderboard boxplots](leaderboard_boxplots.png)](https://www.epics-lab.ca/BrainFMBench/)
+[![Leaderboard boxplots](leaderboard_boxplots.png?v=37d59cd5)](https://www.epics-lab.ca/BrainFMBench/)
 
 _Boxes show 5-fold cross-validation across 5 seeds (25 values); overlaid points show held-out test results for the same 5 seeds._
 
