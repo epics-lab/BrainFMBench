@@ -22,6 +22,7 @@ code: https://github.com/CBICA/Brain2Vec
 weights: https://huggingface.co/cbica/Brain2Vec
 model_card: https://huggingface.co/cbica/Brain2Vec
 paper: https://arxiv.org/abs/2610.28411
+preprocessing_label: "Own pipeline: NiChart DLMUSE (DLICV skull stripping) + FSL FLIRT to the Brain2Vec template"
 datasets:
   - NKI
   - HBN

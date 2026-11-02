@@ -460,7 +460,7 @@ def models_md(meta, present):
     for n in sorted(present):
         y = meta.get(n, {})
         links = " · ".join(f"[{l}]({u})" for l, u in _links(y)) or "-"
-        lines.append(f"| {n} | {y.get('preprocessing', '-')} | {y.get('embedding_dim', '-')} | {links} |")
+        lines.append(f"| {n} | {(y.get('preprocessing_label') or y.get('preprocessing', '-'))} | {y.get('embedding_dim', '-')} | {links} |")
     return lines
 
 
@@ -488,7 +488,7 @@ def tables_html(tables, meta, present):
     for n in sorted(present):
         y = meta.get(n, {})
         links = " &middot; ".join(f"<a href=\"{e(u)}\">{e(l)}</a>" for l, u in _links(y)) or "-"
-        out.append(f"<tr><td>{e(n)}</td><td>{e(str(y.get('preprocessing', '-')))}</td>"
+        out.append(f"<tr><td>{e(n)}</td><td>{e(str((y.get('preprocessing_label') or y.get('preprocessing', '-'))))}</td>"
                    f"<td>{e(str(y.get('embedding_dim', '-')))}</td><td>{links}</td></tr>")
     out.append("</tbody></table>")
     return "\n".join(out)
