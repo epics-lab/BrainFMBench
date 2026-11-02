@@ -6,6 +6,8 @@ description: FreeSurfer aparc (Desikan-Killiany) thickness + surface area (anato
 preprocessing: freesurfer
 embedding_dim: 136
 architecture: FreeSurfer regionsurfacestats, aparc 68-region Thickness+SurfArea (68+68)
+preprocessing_label: "FreeSurfer v6.0.1 (RBC): aparc 68 cortical thickness and surface area"
+paper: https://www.biorxiv.org/content/10.64898/2026.05.15.725427v4
 datasets:
   - NKI
   - HBN
