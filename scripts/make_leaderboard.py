@@ -115,6 +115,14 @@ import matplotlib.colors as _mcolors
 def _all_models_in(table):
     return {m for (m, _ds) in table.keys()}
 
+def _png_v():
+    import hashlib
+    try:
+        return hashlib.sha1(open(os.path.join(REPO, "leaderboard_boxplots.png"), "rb").read()).hexdigest()[:8]
+    except OSError:
+        return "0"
+
+
 def _order_and_colors(table):
     present = _all_models_in(table)
     known = [m for m in MODEL_ORDER if m in present]
@@ -406,7 +414,7 @@ def main():
     ]
     if fig_ok:
         lines += [
-            f"[![Leaderboard boxplots](leaderboard_boxplots.png)]({PAGES_URL})", "",
+            f"[![Leaderboard boxplots](leaderboard_boxplots.png?v={_png_v()})]({PAGES_URL})", "",
             "_Boxes show 5-fold cross-validation across 5 seeds (25 values); "
             "overlaid points show held-out test results for the same 5 seeds._", "",
             f"**[Interactive version]({PAGES_URL})**", "",
@@ -429,7 +437,7 @@ def main():
     if os.path.isfile(readme):
         blk = ["<!-- LEADERBOARD:START -->", ""]
         if fig_ok:
-            blk += [f"[![Leaderboard boxplots](leaderboard_boxplots.png)]({PAGES_URL})", "",
+            blk += [f"[![Leaderboard boxplots](leaderboard_boxplots.png?v={_png_v()})]({PAGES_URL})", "",
                     f"**[Interactive version]({PAGES_URL})**", ""]
         blk += ["| Model | Dataset | Sex (acc) | Age (MAE) | BMI (MAE) |",
                 "|-------|---------|-----------|-----------|-----------|"]
