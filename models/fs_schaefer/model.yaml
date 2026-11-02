@@ -7,7 +7,7 @@ preprocessing: freesurfer
 embedding_dim: 800
 architecture: FreeSurfer regionsurfacestats, Schaefer2018 400-parcel SurfArea+ThickAvg (400+400)
 preprocessing_label: "FreeSurfer v6.0.1 (RBC): Schaefer 400 cortical thickness and surface area"
-paper: https://www.biorxiv.org/content/10.64898/2026.05.15.725427v4
+paper: https://papers.miccai.org/miccai-2026-sat/paper/MedAGI_025.pdf
 datasets:
   - NKI
   - HBN

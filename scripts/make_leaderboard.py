@@ -366,7 +366,7 @@ def make_interactive(table, out_html, extra_html=""):
             "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
             "<title>BrainFMBench Leaderboard</title>"
-            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}th.on{background:#e3e9f0}</style>"
+            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}th.on{background:#e3e9f0}.arr{color:#889;font-size:0.85em;margin-left:4px}th.on .arr{color:#1a5fb4}th[data-col]:hover{background:#eaeef3}</style>"
             "</head><body>\n"
             "<p><a href=\"https://github.com/epics-lab/BrainFMBench\">epics-lab/BrainFMBench</a>"
             " &middot; auto generated from <code>models/*/results.json</code></p>\n"
@@ -485,10 +485,10 @@ def tables_html(tables, meta, present):
     out = ["<h2>Leaderboard</h2>",
            "<p class=\"sub\">Held out test, mean ± std over 5 seeds. Click a dataset column to sort "
            "by that task; click again to reverse. There is no single overall score.</p>",
-           "<table id=\"lb\"><thead><tr><th rowspan=\"2\" data-col=\"0\" data-dir=\"1\">Model</th>"
+           "<table id=\"lb\"><thead><tr><th rowspan=\"2\" data-col=\"0\" data-dir=\"1\">Model <span class=\"arr\">&#8645;</span></th>"
            + "".join(f"<th colspan=\"{len(DATASETS)}\">{e(t['title'])} <span class=\"sub\">({e(t['unit'])})</span></th>"
                      for t in tables) + "</tr><tr>"
-           + "".join(f"<th data-col=\"{k}\" data-dir=\"{-1 if t['task'] == 'sex' else 1}\">{e(ds)}</th>"
+           + "".join(f"<th data-col=\"{k}\" data-dir=\"{-1 if t['task'] == 'sex' else 1}\">{e(ds)} <span class=\"arr\">&#8645;</span></th>"
                      for k, (t, ds) in enumerate(cols, 1)) + "</tr></thead><tbody>"]
     for m in sorted(rows, key=str.lower):
         name = e(m) + (" &dagger;" if rows[m]["mark"] else "")
@@ -512,8 +512,12 @@ document.querySelectorAll('#lb th[data-col]').forEach(function (th) {
       return (isNaN(nx) ? x.localeCompare(y) : nx - ny) * d;
     });
     rows.forEach(function (r) { tb.appendChild(r); });
-    document.querySelectorAll('#lb th').forEach(function (h) { h.classList.remove('on'); });
-    th.classList.add('on'); th.dataset.dir = -d;
+    document.querySelectorAll('#lb th').forEach(function (h) {
+      h.classList.remove('on');
+      var a = h.querySelector('.arr'); if (a) a.innerHTML = '&#8645;';
+    });
+    th.classList.add('on'); th.querySelector('.arr').innerHTML = d > 0 ? '&#9650;' : '&#9660;';
+    th.dataset.dir = -d;
   });
 });
 </script>""")
