@@ -15,6 +15,15 @@ citation: >-
   Untrained Convolutional Neural Networks as Feature Extractors for Structural MRI.
   bioRxiv 2026.06.07.730652 (2026). https://doi.org/10.64898/2026.06.07.730652
 code: https://github.com/epics-lab/untrained-cnn
+paper: https://www.biorxiv.org/content/10.64898/2026.06.07.730652v1
+model_card: https://huggingface.co/epics-lab/untrained-cnn
+note: >-
+  Maintainers' own model. Random features from an untrained 3D CNN: no weights are learned.
+  It extends a classical 3D CNN with multi-channel inputs, a hierarchical encoder with
+  multi-scale feature aggregation, and covariance pooling. The architecture was optimized
+  on NKI, so NKI is not a held out test for un-CNN; it then generalized to HBN and PPMI.
+  PPMI is not on the leaderboard due to data access restrictions. See the paper for the
+  architecture and full results.
 datasets:
   - NKI
   - HBN

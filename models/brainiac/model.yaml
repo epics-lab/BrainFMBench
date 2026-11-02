@@ -9,6 +9,8 @@ architecture: MONAI ViT (96^3, patch 16), pretrained BrainIAC backbone; CLS-toke
 citation: >-
   Tak, D., et al. A generalizable foundation model for analysis of human brain MRI.
   Nature Neuroscience, pp. 1-12 (2026).
+paper: https://www.nature.com/articles/s41593-026-02202-6
+code: https://github.com/AIM-KannLab/BrainIAC
 datasets:
   - NKI
   - HBN

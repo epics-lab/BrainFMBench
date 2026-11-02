@@ -72,9 +72,17 @@ description: one-line description
 preprocessing: turboprep        # turboprep (default), cat12, or raw
 embedding_dim: 768              # your feature dimension
 architecture: short description
+paper: https://...              # paper or preprint (DOI, arXiv, bioRxiv)
+model_card: https://...         # e.g. Hugging Face model page
+code: https://...               # public code repository
 datasets: [NKI, HBN]
 tasks: [sex, age, bmi]
 ```
+
+`paper`, `model_card` and `code` are shown as links on the leaderboard, so please
+include whichever exist. If you are an author of the benchmark or the model was
+designed or tuned on one of the benchmark datasets, add a `note:` explaining it;
+it is shown as a footnote next to your results.
 
 ## `weights.txt`
 

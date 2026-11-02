@@ -9,7 +9,10 @@ See CONTRIBUTING.md for the full guide.
 - **Name:**
 - **Architecture / backbone:**
 - **Embedding dimension:**
-- **Paper / reference (if any):**
+- **Paper / preprint link:**
+- **Model card (e.g. Hugging Face):**
+- **Code repository:**
+- **Was the model designed or tuned on NKI or HBN?** <!-- yes/no; if yes, explain -->
 
 ## What this PR adds
 
@@ -27,6 +30,7 @@ See CONTRIBUTING.md for the full guide.
 ### Files
 - [ ] Everything is under `models/<my-model>/`
 - [ ] `model.yaml` includes `name`, `authors`, `preprocessing`, `embedding_dim`, `datasets`, and `tasks`
+- [ ] `model.yaml` includes `paper`, `model_card` and `code` links where they exist
 - [ ] `preprocessing` is one of the supported options (`turboprep` by default; `cat12` if needed)
 - [ ] `datasets` and `tasks` list only supported values (datasets: `NKI`, `HBN`; tasks: `sex`, `age`, `bmi`)
 

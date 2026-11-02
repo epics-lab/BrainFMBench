@@ -9,6 +9,8 @@ architecture: AnatCL global-descriptor encoder
 citation: >-
   Barbano, C.A., et al. Anatomical foundation models for brain MRIs.
   Pattern Recognition Letters (2025).
+paper: https://www.sciencedirect.com/science/article/pii/S0167865525003848
+code: https://github.com/EIDOSLAB/AnatCL
 datasets:
   - NKI
   - HBN
