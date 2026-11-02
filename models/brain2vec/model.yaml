@@ -20,6 +20,8 @@ walltime: "16:00:00"
 architecture: A 3D masked autoencoder with a 12 layer ViT encoder and an 8 layer ViT decoder. Embeddings are computed using the [CLS] token from the last encoder's head.
 code: https://github.com/CBICA/Brain2Vec
 weights: https://huggingface.co/cbica/Brain2Vec
+model_card: https://huggingface.co/cbica/Brain2Vec
+paper: https://arxiv.org/abs/2610.28411
 datasets:
   - NKI
   - HBN

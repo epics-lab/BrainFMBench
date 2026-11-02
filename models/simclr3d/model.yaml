@@ -10,6 +10,7 @@ citation: >-
   Kaczmarek, E., et al. Building a general SimCLR self-supervised foundation model across
   neurological diseases to advance 3D brain MRI diagnoses. Proceedings of the IEEE/CVF
   International Conference on Computer Vision, pp. 1310-1319 (2025).
+paper: https://arxiv.org/abs/2509.10620
 datasets:
   - NKI
   - HBN

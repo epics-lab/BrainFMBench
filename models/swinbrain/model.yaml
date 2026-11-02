@@ -9,6 +9,7 @@ architecture: MONAI SwinUNETR encoder10 bottleneck, pretrained; adaptive-avg-poo
 citation: >-
   Suo, X., et al. Automatic identification of parkinsonism using clinical multi-contrast
   brain MRI: a large self-supervised vision foundation model strategy. EBioMedicine 116 (2025).
+paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12155752/
 datasets:
   - NKI
   - HBN

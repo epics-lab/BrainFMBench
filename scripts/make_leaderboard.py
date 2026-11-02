@@ -289,7 +289,7 @@ def _box_stats(v):
     return q1, med, q3, v[v >= q1 - 1.5 * iqr].min(), v[v <= q3 + 1.5 * iqr].max()
 
 
-def make_interactive(table, out_html):
+def make_interactive(table, out_html, extra_html=""):
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
 
@@ -366,12 +366,132 @@ def make_interactive(table, out_html):
             "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
             "<title>BrainFMBench Leaderboard</title>"
-            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px}</style>"
+            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}</style>"
             "</head><body>\n"
             "<p><a href=\"https://github.com/epics-lab/BrainFMBench\">epics-lab/BrainFMBench</a>"
             " &middot; auto generated from <code>models/*/results.json</code></p>\n"
-            + plot + "\n</body></html>\n")
+            + plot + "\n" + extra_html + "\n</body></html>\n")
     print(f"Wrote {out_html}")
+
+
+TASK_TABLES = [
+    ("sex", "Sex classification", "balanced accuracy, higher is better", "test_acc", 3, True),
+    ("age", "Age prediction", "MAE in years, lower is better", "test_mae", 2, False),
+    ("bmi", "BMI prediction", "MAE, lower is better", "test_mae", 2, False),
+]
+
+
+def load_meta():
+    import yaml
+    meta = {}
+    for path in sorted(glob.glob(os.path.join(REPO, "models", "*", "model.yaml"))):
+        try:
+            y = yaml.safe_load(open(path)) or {}
+        except Exception as e:
+            print(f"skip {path}: {e}")
+            continue
+        if y.get("name"):
+            meta[y["name"]] = y
+    return meta
+
+
+def _links(y):
+    out = []
+    for key, label in (("paper", "paper"), ("model_card", "model card"), ("code", "code")):
+        v = str(y.get(key) or "").split()[0] if y.get(key) else ""
+        if v.startswith("http") and "private" not in str(y.get(key)):
+            out.append((label, v))
+    return out
+
+
+def build_task_tables(table, meta):
+    """Per task: rows sorted by mean rank across datasets, one column per dataset."""
+    models = sorted({m for (m, _ds) in table})
+    tables = []
+    for task, title, unit, key, places, higher in TASK_TABLES:
+        cells, ranks = {}, {}
+        for ds in DATASETS:
+            vals = []
+            for m in models:
+                r = table.get((m, ds), {}).get(task) or {}
+                mu = r.get(key + "_mean")
+                if mu is not None:
+                    cells[(m, ds)] = fmt(mu, r.get(key + "_std"), places)
+                    vals.append((mu, m))
+            vals.sort(reverse=higher)
+            for i, (_mu, m) in enumerate(vals, 1):
+                ranks[(m, ds)] = i
+        rows = []
+        for m in models:
+            rs = [ranks[(m, ds)] for ds in DATASETS if (m, ds) in ranks]
+            if rs:
+                rows.append((sum(rs) / len(rs), m))
+        rows.sort()
+        tables.append(dict(task=task, title=title, unit=unit, rows=[
+            dict(model=m, mark=bool(meta.get(m, {}).get("note")), avg_rank=ar,
+                 cells={ds: (cells.get((m, ds), "-"), ranks.get((m, ds))) for ds in DATASETS})
+            for ar, m in rows]))
+    return tables
+
+
+def task_tables_md(tables):
+    lines = []
+    for t in tables:
+        lines += [f"#### {t['title']} ({t['unit']})", "",
+                  "| Avg rank | Model | " + " | ".join(DATASETS) + " |",
+                  "|---|---|" + "---|" * len(DATASETS)]
+        for r in t["rows"]:
+            name = r["model"] + (" †" if r["mark"] else "")
+            cs = []
+            for ds in DATASETS:
+                v, rk = r["cells"][ds]
+                cs.append(f"**{v}**" if rk == 1 else v)
+            lines.append(f"| {r['avg_rank']:.1f} | {name} | " + " | ".join(cs) + " |")
+        lines.append("")
+    return lines
+
+
+def notes_md(meta):
+    return [f"† **{n}:** {y['note'].strip()}" for n, y in sorted(meta.items()) if y.get("note")]
+
+
+def models_md(meta, present):
+    lines = ["| Model | Preprocessing | Dim | Links |", "|---|---|---|---|"]
+    for n in sorted(present):
+        y = meta.get(n, {})
+        links = " · ".join(f"[{l}]({u})" for l, u in _links(y)) or "-"
+        lines.append(f"| {n} | {y.get('preprocessing', '-')} | {y.get('embedding_dim', '-')} | {links} |")
+    return lines
+
+
+def tables_html(tables, meta, present):
+    import html as _h
+    e = _h.escape
+    out = ["<h2>Leaderboard by task</h2>",
+           "<p class=\"sub\">Held out test, mean ± std over 5 seeds. Rows sorted by average rank "
+           "across datasets; best per dataset in bold. No single overall score.</p>"]
+    for t in tables:
+        out.append(f"<h3>{e(t['title'])} <span class=\"sub\">({e(t['unit'])})</span></h3>")
+        out.append("<table><thead><tr><th>Avg rank</th><th>Model</th>"
+                   + "".join(f"<th>{e(d)}</th>" for d in DATASETS) + "</tr></thead><tbody>")
+        for r in t["rows"]:
+            name = e(r["model"]) + (" &dagger;" if r["mark"] else "")
+            tds = "".join(("<td><b>%s</b></td>" if rk == 1 else "<td>%s</td>") % e(v)
+                          for v, rk in (r["cells"][d] for d in DATASETS))
+            out.append(f"<tr><td>{r['avg_rank']:.1f}</td><td>{name}</td>{tds}</tr>")
+        out.append("</tbody></table>")
+    for n, y in sorted(meta.items()):
+        if y.get("note"):
+            out.append(f"<p class=\"note\">&dagger; <b>{e(n)}:</b> {e(y['note'].strip())}</p>")
+    out.append("<h2>Models</h2><table><thead><tr><th>Model</th><th>Preprocessing</th>"
+               "<th>Dim</th><th>Links</th></tr></thead><tbody>")
+    for n in sorted(present):
+        y = meta.get(n, {})
+        links = " &middot; ".join(f"<a href=\"{e(u)}\">{e(l)}</a>" for l, u in _links(y)) or "-"
+        out.append(f"<tr><td>{e(n)}</td><td>{e(str(y.get('preprocessing', '-')))}</td>"
+                   f"<td>{e(str(y.get('embedding_dim', '-')))}</td><td>{links}</td></tr>")
+    out.append("</tbody></table>")
+    return "\n".join(out)
 
 
 def main():
@@ -401,8 +521,12 @@ def main():
         print(f"figure generation failed: {e}")
         fig_ok = False
 
+    meta = load_meta()
+    present = {m for (m, _ds) in table}
+    tables = build_task_tables(table, meta)
     try:
-        make_interactive(table, os.path.join(REPO, "site", "index.html"))
+        make_interactive(table, os.path.join(REPO, "site", "index.html"),
+                         tables_html(tables, meta, present))
     except Exception as e:
         import traceback; traceback.print_exc()
         print(f"interactive figure failed: {e}")
@@ -419,18 +543,14 @@ def main():
             "overlaid points show held-out test results for the same 5 seeds._", "",
             f"**[Interactive version]({PAGES_URL})**", "",
         ]
-    lines += [
-        "| Model | Dataset | Sex (acc) | Age (MAE) | BMI (MAE) |",
-        "|-------|---------|-----------|-----------|-----------|",
-    ]
-    for d in display:
-        lines.append(f"| {d['model']} | {d['dataset']} | "
-                     f"{d['sex_cell']} | {d['age_cell']} | {d['bmi_cell']} |")
+    lines += ["_Held out test, mean ± std over 5 seeds. Rows sorted by average rank across "
+              "datasets; best per dataset in bold. There is no single overall score._", ""]
+    lines += task_tables_md(tables) + notes_md(meta) + ["", "### Models", ""] + models_md(meta, present)
     lines += ["", "_Auto-generated from `models/*/results.json`. Do not edit by hand._"]
 
     with open(os.path.join(REPO, "LEADERBOARD.md"), "w") as f:
         f.write("\n".join(lines))
-    print(f"Wrote LEADERBOARD.md  ({len(display)} rows)")
+    print(f"Wrote LEADERBOARD.md  ({len(tables)} task tables)")
 
     # inject leaderboard (figure + table) into README.md between markers
     readme = os.path.join(REPO, "README.md")
@@ -439,12 +559,10 @@ def main():
         if fig_ok:
             blk += [f"[![Leaderboard boxplots](leaderboard_boxplots.png?v={_png_v()})]({PAGES_URL})", "",
                     f"**[Interactive version]({PAGES_URL})**", ""]
-        blk += ["| Model | Dataset | Sex (acc) | Age (MAE) | BMI (MAE) |",
-                "|-------|---------|-----------|-----------|-----------|"]
-        for d in display:
-            blk.append(f"| {d['model']} | {d['dataset']} | "
-                       f"{d['sex_cell']} | {d['age_cell']} | {d['bmi_cell']} |")
-        blk += ["", "_Ranking varies by task and dataset; there is no single overall winner._",
+        blk += ["_Held out test, mean ± std over 5 seeds. Rows sorted by average rank across "
+                "datasets; best per dataset in bold. There is no single overall score._", ""]
+        blk += task_tables_md(tables) + notes_md(meta)
+        blk += ["", "Model details, papers and model cards: [`LEADERBOARD.md`](LEADERBOARD.md#models).",
                 "", "<!-- LEADERBOARD:END -->"]
         blk_text = "\n".join(blk)
         c = open(readme).read()
