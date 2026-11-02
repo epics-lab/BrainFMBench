@@ -65,11 +65,11 @@ _Held out test, mean ± std over 5 seeds. Rows sorted by average rank across dat
 | 3D-Neuro-SimCLR | turboprep | 512 | [paper](https://arxiv.org/abs/2509.10620) |
 | AnatCL (Global) | cat12 | 512 | [paper](https://www.sciencedirect.com/science/article/pii/S0167865525003848) · [code](https://github.com/EIDOSLAB/AnatCL) |
 | AnatCL (Local) | cat12 | 512 | [paper](https://www.sciencedirect.com/science/article/pii/S0167865525003848) · [code](https://github.com/EIDOSLAB/AnatCL) |
-| Brain2Vec | raw | 768 | [paper](https://arxiv.org/abs/2610.28411) · [model card](https://huggingface.co/cbica/Brain2Vec) · [code](https://github.com/CBICA/Brain2Vec) |
+| Brain2Vec | Own pipeline: NiChart DLMUSE (DLICV skull stripping) + FSL FLIRT to the Brain2Vec template | 768 | [paper](https://arxiv.org/abs/2610.28411) · [model card](https://huggingface.co/cbica/Brain2Vec) · [code](https://github.com/CBICA/Brain2Vec) |
 | BrainIAC | turboprep | 768 | [paper](https://www.nature.com/articles/s41593-026-02202-6) · [code](https://github.com/AIM-KannLab/BrainIAC) |
 | Dinov3D-neuro | turboprep | 792 | [model card](https://huggingface.co/huggingbrain/Dinov3d-Neuro) |
-| FS Schaefer | freesurfer | 800 | - |
-| FS aparc | freesurfer | 136 | - |
+| FS Schaefer | FreeSurfer v6.0.1 (RBC): Schaefer 400 cortical thickness and surface area | 800 | [paper](https://www.biorxiv.org/content/10.64898/2026.05.15.725427v4) |
+| FS aparc | FreeSurfer v6.0.1 (RBC): aparc 68 cortical thickness and surface area | 136 | [paper](https://www.biorxiv.org/content/10.64898/2026.05.15.725427v4) |
 | SwinBrain | turboprep | 384 | [paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12155752/) |
 | un-CNN | turboprep | 9664 | [paper](https://www.biorxiv.org/content/10.64898/2026.06.07.730652v1) · [model card](https://huggingface.co/epics-lab/untrained-cnn) · [code](https://github.com/epics-lab/untrained-cnn) |
 
