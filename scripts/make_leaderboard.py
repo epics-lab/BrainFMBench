@@ -127,7 +127,9 @@ def _order_and_colors(table):
         return min(sum((x - y) ** 2 for x, y in zip(r, _mcolors.to_rgb(u)))
                    for u in colors.values())
     for m in unknown:
-        pick = max((c for c in pool if c not in colors.values()), key=_gap)
+        free = [c for c in pool if c not in colors.values()]
+        strong = [c for c in free if c in pool[:10]]
+        pick = max(strong or free, key=_gap)
         colors[m] = pick
     return known + unknown, colors
 
@@ -341,6 +343,13 @@ def make_interactive(table, out_html):
         margin=dict(l=90, r=20, t=110, b=60),
     )
 
+    try:
+        static = go.Figure(fig)
+        static.update_layout(title_text="BrainFMBench leaderboard", width=1300)
+        static.write_image(os.path.join(REPO, "leaderboard_boxplots.png"), scale=2)
+        print("wrote plotly png")
+    except Exception as e:
+        print(f"plotly png export failed, keeping matplotlib png: {e}")
     plot = fig.to_html(full_html=False, include_plotlyjs="cdn",
                        config={"responsive": True, "displaylogo": False})
     os.makedirs(os.path.dirname(out_html), exist_ok=True)
