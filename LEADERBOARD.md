@@ -12,6 +12,7 @@ _Boxes show 5-fold cross-validation across 5 seeds (25 values); overlaid points 
 | Model | Dataset | Sex (acc) | Age (MAE) | BMI (MAE) |
 |-------|---------|-----------|-----------|-----------|
 | un-CNN | NKI | 0.857 ± 0.032 | 5.11 ± 0.22 | 3.13 ± 0.11 |
+| Brain2Vec | NKI | 0.856 ± 0.044 | 4.83 ± 0.43 | 2.98 ± 0.28 |
 | SwinBrain | NKI | 0.855 ± 0.023 | 9.47 ± 0.54 | 3.97 ± 0.20 |
 | 3D-Neuro-SimCLR | NKI | 0.835 ± 0.023 | 5.86 ± 0.58 | 3.52 ± 0.17 |
 | BrainIAC | NKI | 0.810 ± 0.031 | 13.96 ± 0.59 | 4.16 ± 0.25 |
@@ -26,6 +27,7 @@ _Boxes show 5-fold cross-validation across 5 seeds (25 values); overlaid points 
 | FS aparc | HBN | 0.740 ± 0.034 | 2.13 ± 0.17 | 3.51 ± 0.31 |
 | AnatCL (Global) | NKI | 0.738 ± 0.031 | 6.26 ± 0.43 | 3.92 ± 0.22 |
 | FS Schaefer | HBN | 0.736 ± 0.028 | 2.16 ± 0.19 | 3.44 ± 0.31 |
+| Brain2Vec | HBN | 0.727 ± 0.048 | 1.49 ± 0.09 | 3.01 ± 0.27 |
 | AnatCL (Global) | HBN | 0.723 ± 0.060 | 1.78 ± 0.18 | 3.39 ± 0.33 |
 | AnatCL (Local) | HBN | 0.707 ± 0.063 | 1.85 ± 0.10 | 3.34 ± 0.40 |
 | Dinov3D-neuro | HBN | 0.696 ± 0.041 | 1.96 ± 0.11 | 3.23 ± 0.27 |
