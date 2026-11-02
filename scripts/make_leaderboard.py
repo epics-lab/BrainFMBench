@@ -120,10 +120,15 @@ def _order_and_colors(table):
     known = [m for m in MODEL_ORDER if m in present]
     unknown = sorted(m for m in present if m not in MODEL_COLORS)
     colors = dict(MODEL_COLORS)
-    if unknown:
-        cmap = matplotlib.colormaps["tab20"]
-        for i, m in enumerate(unknown):
-            colors[m] = _mcolors.to_hex(cmap(i % 20))
+    cmap = matplotlib.colormaps["tab20"]
+    pool = [_mcolors.to_hex(matplotlib.colormaps["tab10"](k)) for k in range(10)] + [_mcolors.to_hex(cmap(k)) for k in range(1, 20, 2)]
+    def _gap(c):
+        r = _mcolors.to_rgb(c)
+        return min(sum((x - y) ** 2 for x, y in zip(r, _mcolors.to_rgb(u)))
+                   for u in colors.values())
+    for m in unknown:
+        pick = max((c for c in pool if c not in colors.values()), key=_gap)
+        colors[m] = pick
     return known + unknown, colors
 
 
