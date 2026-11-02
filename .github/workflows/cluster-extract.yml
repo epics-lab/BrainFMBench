@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: cluster-extract
@@ -85,3 +86,9 @@ jobs:
             sleep 10
           done
           echo "push failed after 3 attempts"; exit 1
+
+      - name: Rebuild leaderboard site
+        if: steps.runner.outputs.reaped != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run score.yml --ref main -R ${{ github.repository }} -f rescore_all=false
