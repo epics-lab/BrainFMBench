@@ -366,7 +366,7 @@ def make_interactive(table, out_html, extra_html=""):
             "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
             "<title>BrainFMBench Leaderboard</title>"
-            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}</style>"
+            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}th.on{background:#e3e9f0}</style>"
             "</head><body>\n"
             "<p><a href=\"https://github.com/epics-lab/BrainFMBench\">epics-lab/BrainFMBench</a>"
             " &middot; auto generated from <code>models/*/results.json</code></p>\n"
@@ -434,21 +434,29 @@ def build_task_tables(table, meta):
     return tables
 
 
+def _cols(tables):
+    return [(t, ds) for t in tables for ds in DATASETS]
+
+
+def _short(t):
+    return {"sex": "Sex (acc ↑)", "age": "Age (MAE ↓)", "bmi": "BMI (MAE ↓)"}[t["task"]]
+
+
 def task_tables_md(tables):
-    lines = []
+    cols = _cols(tables)
+    rows = {}
     for t in tables:
-        lines += [f"#### {t['title']} ({t['unit']})", "",
-                  "| Avg rank | Model | " + " | ".join(DATASETS) + " |",
-                  "|---|---|" + "---|" * len(DATASETS)]
         for r in t["rows"]:
-            name = r["model"] + (" †" if r["mark"] else "")
-            cs = []
+            rows.setdefault(r["model"], {"mark": r["mark"], "cells": {}})
             for ds in DATASETS:
-                v, rk = r["cells"][ds]
-                cs.append(f"**{v}**" if rk == 1 else v)
-            lines.append(f"| {r['avg_rank']:.1f} | {name} | " + " | ".join(cs) + " |")
-        lines.append("")
-    return lines
+                rows[r["model"]]["cells"][(t["task"], ds)] = r["cells"][ds][0]
+    lines = ["| Model | " + " | ".join(f"{_short(t)} {ds}" for t, ds in cols) + " |",
+             "|---|" + "---|" * len(cols)]
+    for m in sorted(rows, key=str.lower):
+        name = m + (" †" if rows[m]["mark"] else "")
+        lines.append(f"| {name} | " + " | ".join(rows[m]["cells"].get((t["task"], ds), "-")
+                                                for t, ds in cols) + " |")
+    return lines + [""]
 
 
 def notes_md(meta):
@@ -467,19 +475,48 @@ def models_md(meta, present):
 def tables_html(tables, meta, present):
     import html as _h
     e = _h.escape
-    out = ["<h2>Leaderboard by task</h2>",
-           "<p class=\"sub\">Held out test, mean ± std over 5 seeds. Rows sorted by average rank "
-           "across datasets; best per dataset in bold. No single overall score.</p>"]
+    cols = _cols(tables)
+    rows = {}
     for t in tables:
-        out.append(f"<h3>{e(t['title'])} <span class=\"sub\">({e(t['unit'])})</span></h3>")
-        out.append("<table><thead><tr><th>Avg rank</th><th>Model</th>"
-                   + "".join(f"<th>{e(d)}</th>" for d in DATASETS) + "</tr></thead><tbody>")
         for r in t["rows"]:
-            name = e(r["model"]) + (" &dagger;" if r["mark"] else "")
-            tds = "".join(("<td><b>%s</b></td>" if rk == 1 else "<td>%s</td>") % e(v)
-                          for v, rk in (r["cells"][d] for d in DATASETS))
-            out.append(f"<tr><td>{r['avg_rank']:.1f}</td><td>{name}</td>{tds}</tr>")
-        out.append("</tbody></table>")
+            rows.setdefault(r["model"], {"mark": r["mark"], "cells": {}})
+            for ds in DATASETS:
+                rows[r["model"]]["cells"][(t["task"], ds)] = r["cells"][ds][0]
+    out = ["<h2>Leaderboard</h2>",
+           "<p class=\"sub\">Held out test, mean ± std over 5 seeds. Click a dataset column to sort "
+           "by that task; click again to reverse. There is no single overall score.</p>",
+           "<table id=\"lb\"><thead><tr><th rowspan=\"2\" data-col=\"0\" data-dir=\"1\">Model</th>"
+           + "".join(f"<th colspan=\"{len(DATASETS)}\">{e(t['title'])} <span class=\"sub\">({e(t['unit'])})</span></th>"
+                     for t in tables) + "</tr><tr>"
+           + "".join(f"<th data-col=\"{k}\" data-dir=\"{-1 if t['task'] == 'sex' else 1}\">{e(ds)}</th>"
+                     for k, (t, ds) in enumerate(cols, 1)) + "</tr></thead><tbody>"]
+    for m in sorted(rows, key=str.lower):
+        name = e(m) + (" &dagger;" if rows[m]["mark"] else "")
+        tds = []
+        for t, ds in cols:
+            v = rows[m]["cells"].get((t["task"], ds), "-")
+            key = v.split(" ")[0] if v != "-" else ""
+            tds.append(f"<td data-v=\"{e(key)}\">{e(v)}</td>")
+        out.append(f"<tr><td data-v=\"{e(m.lower())}\">{name}</td>{''.join(tds)}</tr>")
+    out.append("</tbody></table>")
+    out.append("""<script>
+document.querySelectorAll('#lb th[data-col]').forEach(function (th) {
+  th.style.cursor = 'pointer';
+  th.addEventListener('click', function () {
+    var c = +th.dataset.col, d = +th.dataset.dir, tb = document.querySelector('#lb tbody');
+    var rows = Array.from(tb.rows);
+    rows.sort(function (a, b) {
+      var x = a.cells[c].dataset.v, y = b.cells[c].dataset.v;
+      if (x === '') return 1; if (y === '') return -1;
+      var nx = parseFloat(x), ny = parseFloat(y);
+      return (isNaN(nx) ? x.localeCompare(y) : nx - ny) * d;
+    });
+    rows.forEach(function (r) { tb.appendChild(r); });
+    document.querySelectorAll('#lb th').forEach(function (h) { h.classList.remove('on'); });
+    th.classList.add('on'); th.dataset.dir = -d;
+  });
+});
+</script>""")
     for n, y in sorted(meta.items()):
         if y.get("note"):
             out.append(f"<p class=\"note\">&dagger; <b>{e(n)}:</b> {e(y['note'].strip())}</p>")
@@ -543,8 +580,8 @@ def main():
             "overlaid points show held-out test results for the same 5 seeds._", "",
             f"**[Interactive version]({PAGES_URL})**", "",
         ]
-    lines += ["_Held out test, mean ± std over 5 seeds. Rows sorted by average rank across "
-              "datasets; best per dataset in bold. There is no single overall score._", ""]
+    lines += [f"_Held out test, mean ± std over 5 seeds. There is no single overall score; "
+              f"sort by task on the [interactive site]({PAGES_URL})._", ""]
     lines += task_tables_md(tables) + notes_md(meta) + ["", "### Models", ""] + models_md(meta, present)
     lines += ["", "_Auto-generated from `models/*/results.json`. Do not edit by hand._"]
 
@@ -559,8 +596,8 @@ def main():
         if fig_ok:
             blk += [f"[![Leaderboard boxplots](leaderboard_boxplots.png?v={_png_v()})]({PAGES_URL})", "",
                     f"**[Interactive version]({PAGES_URL})**", ""]
-        blk += ["_Held out test, mean ± std over 5 seeds. Rows sorted by average rank across "
-                "datasets; best per dataset in bold. There is no single overall score._", ""]
+        blk += [f"_Held out test, mean ± std over 5 seeds. There is no single overall score; "
+                f"sort by task on the [interactive site]({PAGES_URL})._", ""]
         blk += task_tables_md(tables) + notes_md(meta)
         blk += ["", "Model details, papers and model cards: [`LEADERBOARD.md`](LEADERBOARD.md#models).",
                 "", "<!-- LEADERBOARD:END -->"]
