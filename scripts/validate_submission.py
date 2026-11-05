@@ -7,7 +7,7 @@ from pathlib import Path
 import yaml
 
 REQUIRED = {"name": str, "authors": list, "preprocessing": str, "embedding_dim": int}
-ALLOWED_PREPROCESSING = {"turboprep", "cat12", "freesurfer", "raw"}
+ALLOWED_PREPROCESSING = {"turboprep", "turboprep-affine", "cat12", "freesurfer", "raw"}
 
 def validate_one(path):
     try:
