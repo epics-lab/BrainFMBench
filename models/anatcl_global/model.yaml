@@ -10,7 +10,11 @@ citation: >-
   Barbano, C.A., et al. Anatomical foundation models for brain MRIs.
   Pattern Recognition Letters (2025).
 paper: https://www.sciencedirect.com/science/article/pii/S0167865525003848
-code: https://github.com/EIDOSLAB/AnatCL
+code: https://github.com/carloalbertobarbano/AnatCL
+weights_prestaged: true
+cluster_only: true
+cpus: 2
+walltime: "6:00:00"
 datasets:
   - NKI
   - HBN

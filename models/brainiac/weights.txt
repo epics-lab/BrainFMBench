@@ -1,0 +1,2 @@
+# BrainIAC.ckpt from the BrainIAC Dropbox folder linked in https://github.com/AIM-KannLab/BrainIAC
+# Folder link, not a direct download, so it is staged on the cluster by the maintainers.

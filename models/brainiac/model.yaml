@@ -11,6 +11,11 @@ citation: >-
   Nature Neuroscience, pp. 1-12 (2026).
 paper: https://www.nature.com/articles/s41593-026-02202-6
 code: https://github.com/AIM-KannLab/BrainIAC
+weights: https://github.com/AIM-KannLab/BrainIAC#model-checkpoints
+weights_prestaged: true
+cluster_only: true
+cpus: 2
+walltime: "6:00:00"
 datasets:
   - NKI
   - HBN

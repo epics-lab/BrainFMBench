@@ -10,6 +10,12 @@ citation: >-
   Suo, X., et al. Automatic identification of parkinsonism using clinical multi-contrast
   brain MRI: a large self-supervised vision foundation model strategy. EBioMedicine 116 (2025).
 paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12155752/
+code: https://github.com/MAI-Lab-West-China-Hospital/SwinBrain
+weights: https://github.com/MAI-Lab-West-China-Hospital/SwinBrain#download-pretrained-models
+weights_prestaged: true
+cluster_only: true
+cpus: 2
+walltime: "6:00:00"
 datasets:
   - NKI
   - HBN
