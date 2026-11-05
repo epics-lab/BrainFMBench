@@ -75,6 +75,9 @@ jobs:
           for m in models:
               meta = yaml.safe_load(open(f"models/{m}/model.yaml"))
               for ds in meta.get("datasets", []):
+                  # features arrive later from cluster-extract, which scores them itself
+                  if not any(os.path.isfile(f"models/{m}/features/{ds}{ext}") for ext in (".csv", ".parquet")):
+                      continue
                   for task in meta.get("tasks", []):
                       include.append({"model": m, "dataset": ds, "task": task})
           print("matrix=" + json.dumps({"include": include}))
