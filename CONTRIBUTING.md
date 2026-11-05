@@ -130,3 +130,13 @@ datasets, and rebuilt only when `requirements.txt` changes.
 
 Because extraction runs on our allocation, only maintainer-approved submissions
 are executed — we never run unreviewed code automatically.
+
+## Versioning
+
+Results are versioned so every number can be cited and reproduced.
+
+- **New model:** no new version. The leaderboard updates on merge.
+- **Minor release, e.g. 1.1:** new datasets, tasks or preprocessing options. Existing numbers do not change.
+- **Major release, e.g. 2.0:** a new probe head or CV scheme, or any change to existing numbers, such as label corrections.
+
+Each release is tagged, listed in [CHANGELOG.md](CHANGELOG.md) and archived on Zenodo with a DOI.

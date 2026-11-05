@@ -2,6 +2,8 @@ cff-version: 1.2.0
 message: "If you use BrainFMBench, please cite the paper below."
 title: "BrainFMBench: a living benchmark for brain structural MRI foundation models"
 type: software
+version: 1.0.0
+date-released: "2026-11-05"
 license: MIT
 repository-code: "https://github.com/epics-lab/BrainFMBench"
 url: "https://www.epics-lab.ca/BrainFMBench/"
