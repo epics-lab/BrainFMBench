@@ -32,8 +32,10 @@ def extract(input_dir, output_csv, weights_dir):
 ```
 
 - **`input_dir`** — a directory of preprocessed volumes, one folder per subject:
-  `<input_dir>/<subject_id>/normalized.nii.gz`. (This is turboprep output;
-  `cat12` is also available if you set `preprocessing: cat12`.)
+  `<input_dir>/<subject_id>/normalized.nii.gz`. (This is turboprep output.)
+
+  **CAT12.** Set `preprocessing: cat12` to receive the CAT12 VBM modulated grey
+  matter map instead: `<input_dir>/<subject_id>/mwp1.nii`.
 
   **Affine registration.** Set `preprocessing: turboprep-affine` for turboprep
   with affine registration to MNI 1 mm, shape 193 × 229 × 193. Its `normalized.nii.gz` is z scored with background near

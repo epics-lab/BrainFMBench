@@ -1,0 +1,5 @@
+torch
+monai==1.4.0
+einops
+nibabel
+numpy

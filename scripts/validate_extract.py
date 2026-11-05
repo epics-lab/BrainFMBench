@@ -87,7 +87,7 @@ def check_extract_runs(model_dir, meta):
             # affine outputs are z scored with background near -60
             vol = np.random.randn(16, 16, 16).astype(np.float32)
             vol[:3] = vol[-3:] = -60.0
-        fname = "T1w.nii.gz" if meta.get("preprocessing") == "raw" else "normalized.nii.gz"
+        fname = {"raw": "T1w.nii.gz", "cat12": "mwp1.nii"}.get(meta.get("preprocessing"), "normalized.nii.gz")
         nib.save(nib.Nifti1Image(vol, np.eye(4)), os.path.join(sd, fname))
         if meta.get("preprocessing") == "turboprep-affine":
             nib.save(nib.Nifti1Image((vol > -60).astype(np.uint8), np.eye(4)),

@@ -11,6 +11,11 @@ citation: >-
   neurological diseases to advance 3D brain MRI diagnoses. Proceedings of the IEEE/CVF
   International Conference on Computer Vision, pp. 1310-1319 (2025).
 paper: https://arxiv.org/abs/2509.10620
+code: https://github.com/emilykaczmarek/3D-Neuro-SimCLR
+weights: https://github.com/emilykaczmarek/3D-Neuro-SimCLR/releases/tag/v1.0.0
+cluster_only: true
+cpus: 2
+walltime: "6:00:00"
 datasets:
   - NKI
   - HBN

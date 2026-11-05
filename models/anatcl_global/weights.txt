@@ -1,0 +1,2 @@
+# weights_global_fold0.pth to weights_global_fold4.pth, the AnatCL checkpoints used for the MedAGI 2026 paper
+# Staged on the cluster by the maintainers; see https://github.com/carloalbertobarbano/AnatCL
