@@ -83,8 +83,15 @@ def check_extract_runs(model_dir, meta):
     for sid in ["SUB01", "SUB02"]:
         sd = os.path.join(idir, sid); os.makedirs(sd)
         vol = (np.random.rand(16, 16, 16) * 100).astype(np.float32)
+        if meta.get("preprocessing") == "turboprep-affine":
+            # affine outputs are z scored with background near -60
+            vol = np.random.randn(16, 16, 16).astype(np.float32)
+            vol[:3] = vol[-3:] = -60.0
         fname = "T1w.nii.gz" if meta.get("preprocessing") == "raw" else "normalized.nii.gz"
         nib.save(nib.Nifti1Image(vol, np.eye(4)), os.path.join(sd, fname))
+        if meta.get("preprocessing") == "turboprep-affine":
+            nib.save(nib.Nifti1Image((vol > -60).astype(np.uint8), np.eye(4)),
+                     os.path.join(sd, "mask.nii.gz"))
     out = os.path.join(tmp, "out.csv")
     wdir = os.path.join(tmp, "weights"); os.makedirs(wdir)
     prep_py = os.path.join(model_dir, "preprocess.py")

@@ -35,6 +35,11 @@ def extract(input_dir, output_csv, weights_dir):
   `<input_dir>/<subject_id>/normalized.nii.gz`. (This is turboprep output;
   `cat12` is also available if you set `preprocessing: cat12`.)
 
+  **Affine registration.** Set `preprocessing: turboprep-affine` for HD-BET
+  skull stripping followed by affine registration to MNI 1 mm, shape
+  193 × 229 × 193. Its `normalized.nii.gz` is z scored with background near
+  −60, so mask with the accompanying `mask.nii.gz`, not `img > 0`.
+
   **Your own preprocessing.** Set `preprocessing: raw` to receive the
   unprocessed T1 instead: `<raw_dir>/<subject_id>/T1w.nii.gz`. Scans come
   straight from the scanner, so shapes and voxel sizes vary by site
@@ -69,7 +74,7 @@ authors:
   - Lastname, F., et al.
 submitted_by: Your Name
 description: one-line description
-preprocessing: turboprep        # turboprep (default), cat12, or raw
+preprocessing: turboprep        # turboprep (default), turboprep-affine, cat12, or raw
 embedding_dim: 768              # your feature dimension
 architecture: short description
 paper: https://...              # paper or preprint (DOI, arXiv, bioRxiv)

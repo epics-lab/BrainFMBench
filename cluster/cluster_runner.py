@@ -17,7 +17,7 @@ CLUSTER_DATA = "/home/arelbaha/links/scratch/OpenMRIdatasets"           # unifor
 TEMPLATE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "extract_template.sh")
 CLUSTER_USER = "arelbaha"
 
-SUPPORTED_PREP = {"turboprep", "cat12", "raw"}
+SUPPORTED_PREP = {"turboprep", "turboprep-affine", "cat12", "raw"}
 MAX_CSV_BYTES = 50_000_000
 
 
