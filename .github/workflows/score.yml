@@ -136,6 +136,17 @@ jobs:
 
       - run: python scripts/make_leaderboard.py
 
+      - name: Build archived versions from release tags
+        run: |
+          # Every release tag v* is rebuilt from its own commit, with its own code and
+          # results, and served at /<tag>/. The current main stays at the site root.
+          for tag in $(git tag --list 'v*' --sort=-v:refname); do
+            git worktree add -q "/tmp/$tag" "$tag"
+            (cd "/tmp/$tag" && python scripts/make_leaderboard.py > /dev/null) || { echo "skip $tag"; continue; }
+            mkdir -p "site/$tag" && cp -r "/tmp/$tag/site/." "site/$tag/"
+          done
+          python scripts/version_nav.py site
+
       - name: Upload interactive leaderboard
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
