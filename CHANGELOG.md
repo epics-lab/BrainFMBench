@@ -2,6 +2,11 @@
 
 BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#versioning).
 
+## v1.1.0, 2026-11-05
+
+- Preprocessing: added `turboprep-affine`, turboprep with affine registration to MNI 1 mm
+- No existing numbers changed
+
 ## v1.0.0, 2026-11-05
 
 First versioned release.
