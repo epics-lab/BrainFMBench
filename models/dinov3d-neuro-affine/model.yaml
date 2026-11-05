@@ -1,0 +1,23 @@
+name: Dinov3D-neuro
+authors:
+  - Gilmore, A.
+  - Rokem, A.
+submitted_by: Rokem, Ariel
+description: DINOv3 3D ViT-B/16 trained from scratch on FOMO300K (no diffusion); teacher checkpoint training_122999, CLS token
+preprocessing: turboprep-affine
+preprocessing_label: "turboprep with affine registration to MNI 1 mm"
+embedding_dim: 792
+architecture: 3D ViT-B/16, RoPE positional embedding, no register tokens; CLS token of the teacher backbone
+code: https://github.com/asagilmore/dinov3d (private, commit e5ef877)
+weights: https://huggingface.co/huggingbrain/Dinov3d-Neuro
+cluster_only: true
+cpus: 8
+walltime: "3:00:00"
+model_card: https://huggingface.co/huggingbrain/Dinov3d-Neuro
+datasets:
+  - NKI
+  - HBN
+tasks:
+  - sex
+  - age
+  - bmi

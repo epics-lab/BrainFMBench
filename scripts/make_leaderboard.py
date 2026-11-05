@@ -69,9 +69,17 @@ def fmt(mean, std, places=3):
 
 def load_rows():
     rows = []
+    import yaml
     for path in sorted(glob.glob(os.path.join(REPO, "models", "*", "results.json"))):
         try:
-            rows.extend(json.load(open(path)))
+            # several folders can share a model name, one per preprocessing; take the
+            # preprocessing from each folder's own model.yaml when a row lacks it
+            ypath = os.path.join(os.path.dirname(path), "model.yaml")
+            prep = (yaml.safe_load(open(ypath)) or {}).get("preprocessing") if os.path.isfile(ypath) else None
+            for r in json.load(open(path)):
+                if prep and not r.get("preprocessing"):
+                    r["preprocessing"] = prep
+                rows.append(r)
         except Exception as e:
             print(f"skip {path}: {e}")
     return rows
@@ -630,7 +638,10 @@ def main():
             print(f"Injected leaderboard into {readme}")
             import glob, re
             root = os.path.dirname(os.path.abspath(readme))
-            n = len(glob.glob(os.path.join(root, "models", "*", "results.json")))
+            # count distinct model names, not folders: one model can have several preprocessing folders
+            import yaml
+            n = len({(yaml.safe_load(open(os.path.join(os.path.dirname(r), "model.yaml"))) or {}).get("name", r)
+                     for r in glob.glob(os.path.join(root, "models", "*", "results.json"))})
             c2 = re.sub(r"_Models-\d+-", f"_Models-{n}-", c)
             if c2 != c:
                 open(readme, "w").write(c2)

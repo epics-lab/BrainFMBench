@@ -2,9 +2,10 @@
 
 BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#versioning).
 
-## v1.1.0, 2026-11-05
+## v1.1.0, unreleased
 
 - Preprocessing: added `turboprep-affine`, turboprep with affine registration to MNI 1 mm
+- Results: un-CNN and Dinov3D neuro on `turboprep-affine`
 - No existing numbers changed
 
 ## v1.0.0, 2026-11-05
