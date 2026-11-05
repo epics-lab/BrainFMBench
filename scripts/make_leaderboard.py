@@ -505,8 +505,8 @@ def tables_html(ent, meta, present):
             for ds, t in cols:
                 mu, txt = ent[k].get((ds, t), (None, "-"))
                 key = "" if mu is None else repr(mu)
-                b = mu is not None and mu == best.get((probe, ds, t))
-                tds.append(f"<td data-v=\"{key}\"{' class=\"best\"' if b else ''}>{e(txt)}</td>")
+                cls = ' class="best"' if mu is not None and mu == best.get((probe, ds, t)) else ""
+                tds.append(f"<td data-v=\"{key}\"{cls}>{e(txt)}</td>")
             out.append(f"<tr><td data-v=\"{e(m.lower())}\">{name}</td>"
                        f"<td data-v=\"{e(prep)}\">{e(prep)}</td>{''.join(tds)}</tr>")
         out.append("</tbody>")
