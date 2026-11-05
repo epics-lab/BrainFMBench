@@ -66,7 +66,9 @@ def main():
             continue
         for task in tasks:
             try:
-                rows.append(score(feats, labels, ds, task, model_name=name))
+                row = score(feats, labels, ds, task, model_name=name)
+                row.update(probe="rf", preprocessing=meta.get("preprocessing", "turboprep"))
+                rows.append(row)
             except Exception as e:
                 failures.append(f"{ds}/{task}: {e}")
 

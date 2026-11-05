@@ -366,7 +366,7 @@ def make_interactive(table, out_html, extra_html=""):
             "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
             "<title>BrainFMBench Leaderboard</title>"
-            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}th.on{background:#e3e9f0}.arr{color:#889;font-size:0.85em;margin-left:4px}th.on .arr{color:#1a5fb4}th[data-col]:hover{background:#eaeef3}</style>"
+            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}th.on{background:#e3e9f0}.arr{color:#889;font-size:0.85em;margin-left:4px}th.on .arr{color:#1a5fb4}th[data-col]:hover{background:#eaeef3}tr.grp th{background:#e8edf2;text-align:left;font-size:13px;letter-spacing:.02em}th.ds{text-align:center}td.best{font-weight:600}</style>"
             "</head><body>\n"
             "<p><a href=\"https://github.com/epics-lab/BrainFMBench\">epics-lab/BrainFMBench</a>"
             " &middot; auto generated from <code>models/*/results.json</code></p>\n"
@@ -404,59 +404,63 @@ def _links(y):
     return out
 
 
-def build_task_tables(table, meta):
-    """Per task: rows sorted by mean rank across datasets, one column per dataset."""
-    models = sorted({m for (m, _ds) in table})
-    tables = []
-    for task, title, unit, key, places, higher in TASK_TABLES:
-        cells, ranks = {}, {}
-        for ds in DATASETS:
+PROBES = [("linear", "Linear probe"), ("rf", "RandomForest probe")]
+TASK_SPEC = {task: dict(key=key, places=places, higher=higher, title=title)
+             for task, title, unit, key, places, higher in TASK_TABLES}
+SHORT = {"sex": "Sex (acc ↑)", "age": "Age (MAE ↓)", "bmi": "BMI (MAE ↓)"}
+
+
+def build_entries(rows, meta):
+    """One leaderboard row per (probe, model, preprocessing): {(dataset, task): (mean, text)}."""
+    ent = {}
+    for r in rows:
+        spec = TASK_SPEC.get(r.get("task"))
+        if spec is None:
+            continue
+        m = r["model"]
+        prep = r.get("preprocessing") or meta.get(m, {}).get("preprocessing", "turboprep")
+        mu = r.get(spec["key"] + "_mean")
+        if mu is None:
+            continue
+        cell = (mu, fmt(mu, r.get(spec["key"] + "_std"), spec["places"]))
+        ent.setdefault((r.get("probe", "rf"), m, prep), {})[(r["dataset"], r["task"])] = cell
+    return ent
+
+
+def _cols():
+    return [(ds, t) for ds in DATASETS for t, *_ in TASK_TABLES]
+
+
+def _best(ent):
+    """Best mean per (probe, dataset, task)."""
+    best = {}
+    for (probe, _m, _p), cells in ent.items():
+        for (ds, t), (mu, _txt) in cells.items():
+            k = (probe, ds, t)
+            hi = TASK_SPEC[t]["higher"]
+            if k not in best or (mu > best[k] if hi else mu < best[k]):
+                best[k] = mu
+    return best
+
+
+def _probe_keys(ent, probe):
+    return sorted((k for k in ent if k[0] == probe), key=lambda k: (k[1].lower(), k[2]))
+
+
+def task_tables_md(ent, meta):
+    cols, best = _cols(), _best(ent)
+    lines = ["| Probe | Model | Preprocessing | " + " | ".join(f"{ds} {SHORT[t]}" for ds, t in cols) + " |",
+             "|---|---|---|" + "---|" * len(cols)]
+    for probe, label in PROBES:
+        for k in _probe_keys(ent, probe):
+            _, m, prep = k
+            name = m + (" †" if meta.get(m, {}).get("note") else "")
             vals = []
-            for m in models:
-                r = table.get((m, ds), {}).get(task) or {}
-                mu = r.get(key + "_mean")
-                if mu is not None:
-                    cells[(m, ds)] = fmt(mu, r.get(key + "_std"), places)
-                    vals.append((mu, m))
-            vals.sort(reverse=higher)
-            for i, (_mu, m) in enumerate(vals, 1):
-                ranks[(m, ds)] = i
-        rows = []
-        for m in models:
-            rs = [ranks[(m, ds)] for ds in DATASETS if (m, ds) in ranks]
-            if rs:
-                rows.append((sum(rs) / len(rs), m))
-        rows.sort()
-        tables.append(dict(task=task, title=title, unit=unit, rows=[
-            dict(model=m, mark=bool(meta.get(m, {}).get("note")), avg_rank=ar,
-                 cells={ds: (cells.get((m, ds), "-"), ranks.get((m, ds))) for ds in DATASETS})
-            for ar, m in rows]))
-    return tables
-
-
-def _cols(tables):
-    return [(t, ds) for t in tables for ds in DATASETS]
-
-
-def _short(t):
-    return {"sex": "Sex (acc ↑)", "age": "Age (MAE ↓)", "bmi": "BMI (MAE ↓)"}[t["task"]]
-
-
-def task_tables_md(tables):
-    cols = _cols(tables)
-    rows = {}
-    for t in tables:
-        for r in t["rows"]:
-            rows.setdefault(r["model"], {"mark": r["mark"], "cells": {}})
-            for ds in DATASETS:
-                rows[r["model"]]["cells"][(t["task"], ds)] = r["cells"][ds][0]
-    lines = ["| Model | " + " | ".join(f"{_short(t)} {ds}" for t, ds in cols) + " |",
-             "|---|" + "---|" * len(cols)]
-    for m in sorted(rows, key=str.lower):
-        name = m + (" †" if rows[m]["mark"] else "")
-        lines.append(f"| {name} | " + " | ".join(rows[m]["cells"].get((t["task"], ds), "-")
-                                                for t, ds in cols) + " |")
-    return lines + [""]
+            for ds, t in cols:
+                mu, txt = ent[k].get((ds, t), (None, "-"))
+                vals.append(f"**{txt}**" if mu is not None and mu == best.get((probe, ds, t)) else txt)
+            lines.append(f"| {label.split()[0]} | {name} | {prep} | " + " | ".join(vals) + " |")
+    return lines + ["", "_Bold: best per column within each probe._", ""]
 
 
 def notes_md(meta):
@@ -472,46 +476,56 @@ def models_md(meta, present):
     return lines
 
 
-def tables_html(tables, meta, present):
+def tables_html(ent, meta, present):
     import html as _h
     e = _h.escape
-    cols = _cols(tables)
-    rows = {}
-    for t in tables:
-        for r in t["rows"]:
-            rows.setdefault(r["model"], {"mark": r["mark"], "cells": {}})
-            for ds in DATASETS:
-                rows[r["model"]]["cells"][(t["task"], ds)] = r["cells"][ds][0]
+    cols, best = _cols(), _best(ent)
+    ncol = 2 + len(cols)
+    ntask = len(TASK_TABLES)
     out = ["<h2>Leaderboard</h2>",
-           "<p class=\"sub\">Held out test, mean ± std over 5 seeds. Click a dataset column to sort "
-           "by that task; click again to reverse. There is no single overall score.</p>",
-           "<table id=\"lb\"><thead><tr><th rowspan=\"2\" data-col=\"0\" data-dir=\"1\">Model <span class=\"arr\">&#8645;</span></th>"
-           + "".join(f"<th colspan=\"{len(DATASETS)}\">{e(t['title'])} <span class=\"sub\">({e(t['unit'])})</span></th>"
-                     for t in tables) + "</tr><tr>"
-           + "".join(f"<th data-col=\"{k}\" data-dir=\"{-1 if t['task'] == 'sex' else 1}\">{e(ds)} <span class=\"arr\">&#8645;</span></th>"
-                     for k, (t, ds) in enumerate(cols, 1)) + "</tr></thead><tbody>"]
-    for m in sorted(rows, key=str.lower):
-        name = e(m) + (" &dagger;" if rows[m]["mark"] else "")
-        tds = []
-        for t, ds in cols:
-            v = rows[m]["cells"].get((t["task"], ds), "-")
-            key = v.split(" ")[0] if v != "-" else ""
-            tds.append(f"<td data-v=\"{e(key)}\">{e(v)}</td>")
-        out.append(f"<tr><td data-v=\"{e(m.lower())}\">{name}</td>{''.join(tds)}</tr>")
-    out.append("</tbody></table>")
+           "<p class=\"sub\">Held out test, mean ± std over 5 seeds. Rows are grouped by probe; "
+           "click a column to sort within each probe, click again to reverse. Bold marks the best "
+           "value per column within a probe. There is no single overall score.</p>",
+           "<table id=\"lb\"><thead><tr>"
+           "<th rowspan=\"2\" data-col=\"0\" data-dir=\"1\">Model <span class=\"arr\">&#8645;</span></th>"
+           "<th rowspan=\"2\" data-col=\"1\" data-dir=\"1\">Preprocessing <span class=\"arr\">&#8645;</span></th>"
+           + "".join(f"<th colspan=\"{ntask}\" class=\"ds\">{e(ds)}</th>" for ds in DATASETS) + "</tr><tr>"
+           + "".join(f"<th data-col=\"{k}\" data-dir=\"{-1 if TASK_SPEC[t]['higher'] else 1}\">"
+                     f"{e(SHORT[t])} <span class=\"arr\">&#8645;</span></th>"
+                     for k, (ds, t) in enumerate(cols, 2)) + "</tr></thead>"]
+    for probe, label in PROBES:
+        keys = _probe_keys(ent, probe)
+        if not keys:
+            continue
+        out.append(f"<tbody><tr class=\"grp\"><th colspan=\"{ncol}\">{e(label)}</th></tr>")
+        for k in keys:
+            _, m, prep = k
+            name = e(m) + (" &dagger;" if meta.get(m, {}).get("note") else "")
+            tds = []
+            for ds, t in cols:
+                mu, txt = ent[k].get((ds, t), (None, "-"))
+                key = "" if mu is None else repr(mu)
+                b = mu is not None and mu == best.get((probe, ds, t))
+                tds.append(f"<td data-v=\"{key}\"{' class=\"best\"' if b else ''}>{e(txt)}</td>")
+            out.append(f"<tr><td data-v=\"{e(m.lower())}\">{name}</td>"
+                       f"<td data-v=\"{e(prep)}\">{e(prep)}</td>{''.join(tds)}</tr>")
+        out.append("</tbody>")
+    out.append("</table>")
     out.append("""<script>
 document.querySelectorAll('#lb th[data-col]').forEach(function (th) {
   th.style.cursor = 'pointer';
   th.addEventListener('click', function () {
-    var c = +th.dataset.col, d = +th.dataset.dir, tb = document.querySelector('#lb tbody');
-    var rows = Array.from(tb.rows);
-    rows.sort(function (a, b) {
-      var x = a.cells[c].dataset.v, y = b.cells[c].dataset.v;
-      if (x === '') return 1; if (y === '') return -1;
-      var nx = parseFloat(x), ny = parseFloat(y);
-      return (isNaN(nx) ? x.localeCompare(y) : nx - ny) * d;
+    var c = +th.dataset.col, d = +th.dataset.dir;
+    document.querySelectorAll('#lb tbody').forEach(function (tb) {
+      var rows = Array.from(tb.rows).filter(function (r) { return !r.classList.contains('grp'); });
+      rows.sort(function (a, b) {
+        var x = a.cells[c].dataset.v, y = b.cells[c].dataset.v;
+        if (x === '') return 1; if (y === '') return -1;
+        var nx = parseFloat(x), ny = parseFloat(y);
+        return (isNaN(nx) ? x.localeCompare(y) : nx - ny) * d;
+      });
+      rows.forEach(function (r) { tb.appendChild(r); });
     });
-    rows.forEach(function (r) { tb.appendChild(r); });
     document.querySelectorAll('#lb th').forEach(function (h) {
       h.classList.remove('on');
       var a = h.querySelector('.arr'); if (a) a.innerHTML = '&#8645;';
@@ -539,6 +553,8 @@ def main():
     rows = load_rows()
     table = {}
     for r in rows:
+        if r.get("probe", "rf") != "rf":   # figures show the RandomForest probe
+            continue
         table.setdefault((r["model"], r["dataset"]), {})[r["task"]] = r
 
     display = []
@@ -564,10 +580,10 @@ def main():
 
     meta = load_meta()
     present = {m for (m, _ds) in table}
-    tables = build_task_tables(table, meta)
+    ent = build_entries(rows, meta)
     try:
         make_interactive(table, os.path.join(REPO, "site", "index.html"),
-                         tables_html(tables, meta, present))
+                         tables_html(ent, meta, present))
     except Exception as e:
         import traceback; traceback.print_exc()
         print(f"interactive figure failed: {e}")
@@ -586,12 +602,12 @@ def main():
         ]
     lines += [f"_Held out test, mean ± std over 5 seeds. There is no single overall score; "
               f"sort by task on the [interactive site]({PAGES_URL})._", ""]
-    lines += task_tables_md(tables) + notes_md(meta) + ["", "### Models", ""] + models_md(meta, present)
+    lines += task_tables_md(ent, meta) + notes_md(meta) + ["", "### Models", ""] + models_md(meta, present)
     lines += ["", "_Auto-generated from `models/*/results.json`. Do not edit by hand._"]
 
     with open(os.path.join(REPO, "LEADERBOARD.md"), "w") as f:
         f.write("\n".join(lines))
-    print(f"Wrote LEADERBOARD.md  ({len(tables)} task tables)")
+    print(f"Wrote LEADERBOARD.md  ({len(ent)} leaderboard rows)")
 
     # inject leaderboard (figure + table) into README.md between markers
     readme = os.path.join(REPO, "README.md")
@@ -602,7 +618,7 @@ def main():
                     f"**[Interactive version]({PAGES_URL})**", ""]
         blk += [f"_Held out test, mean ± std over 5 seeds. There is no single overall score; "
                 f"sort by task on the [interactive site]({PAGES_URL})._", ""]
-        blk += task_tables_md(tables) + notes_md(meta)
+        blk += task_tables_md(ent, meta) + notes_md(meta)
         blk += ["", "Model details, papers and model cards: [`LEADERBOARD.md`](LEADERBOARD.md#models).",
                 "", "<!-- LEADERBOARD:END -->"]
         blk_text = "\n".join(blk)
