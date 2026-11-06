@@ -19,11 +19,46 @@ from sklearn.model_selection import train_test_split, StratifiedKFold, KFold
 from sklearn.metrics import (balanced_accuracy_score, roc_auc_score,
                              mean_absolute_error, r2_score)
 from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import make_pipeline
 
 SEEDS = [0, 1, 2, 3, 42]
+PROBES = ("rf", "linear")
+ALPHA_GRID = np.logspace(-2, 5, 30)   # ridge, age and BMI
+C_GRID = np.logspace(-5, 5, 30)       # logistic regression, sex
 
 
-def run_classification(X_dict, y, test_size=0.1, task_name="Classification"):
+def make_probe(probe, kind, seed):
+    """StandardScaler + head on frozen features.
+
+    rf:     the paper's fixed RandomForest, no tuning.
+    linear: ridge (age, BMI) or L2 logistic regression (sex). alpha or C is chosen
+            by inner fivefold CV on the training data only, then refit on all of it.
+    """
+    if probe == "rf":
+        if kind == "classification":
+            head = RandomForestClassifier(n_estimators=200, max_depth=6, min_samples_split=5,
+                                          random_state=seed, n_jobs=-1, max_features='sqrt',
+                                          class_weight='balanced')
+        else:
+            head = RandomForestRegressor(n_estimators=200, max_depth=6, min_samples_split=5,
+                                         random_state=seed, n_jobs=-1)
+        return make_pipeline(StandardScaler(), head)
+    if probe != "linear":
+        raise ValueError(f"unknown probe {probe!r}; allowed: {PROBES}")
+    if kind == "classification":
+        pipe = make_pipeline(StandardScaler(), LogisticRegression(solver="lbfgs", max_iter=2000))
+        grid, scoring = {"logisticregression__C": C_GRID}, "accuracy"
+        inner = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
+    else:
+        pipe = make_pipeline(StandardScaler(), Ridge(solver="cholesky"))
+        grid, scoring = {"ridge__alpha": ALPHA_GRID}, "neg_mean_squared_error"
+        inner = KFold(n_splits=5, shuffle=True, random_state=seed)
+    return GridSearchCV(pipe, grid, cv=inner, scoring=scoring, n_jobs=-1)
+
+
+def run_classification(X_dict, y, test_size=0.1, task_name="Classification", probe="rf"):
     print(f"\n{task_name}")
     results = {}
     for model, X in X_dict.items():
@@ -41,23 +76,15 @@ def run_classification(X_dict, y, test_size=0.1, task_name="Classification"):
                 train_idx, val_idx = cv_idx[train_rel], cv_idx[val_rel]
                 if len(np.unique(y[train_idx])) < 2:
                     continue
-                scaler = StandardScaler()
-                rf = RandomForestClassifier(n_estimators=200, max_depth=6, min_samples_split=5,
-                                            random_state=seed, n_jobs=-1, max_features='sqrt',
-                                            class_weight='balanced')
-                rf.fit(scaler.fit_transform(X[train_idx]), y[train_idx])
-                proba = rf.predict_proba(scaler.transform(X[val_idx]))[:, 1]
-                cv_acc.append(balanced_accuracy_score(y[val_idx], rf.predict(scaler.transform(X[val_idx]))))
+                m = make_probe(probe, "classification", seed).fit(X[train_idx], y[train_idx])
+                proba = m.predict_proba(X[val_idx])[:, 1]
+                cv_acc.append(balanced_accuracy_score(y[val_idx], m.predict(X[val_idx])))
                 cv_auc.append(roc_auc_score(y[val_idx], proba))
 
             # ---- dots: held-out test for this seed ----
-            scaler = StandardScaler()
-            rf = RandomForestClassifier(n_estimators=200, max_depth=6, min_samples_split=5,
-                                        random_state=seed, n_jobs=-1, max_features='sqrt',
-                                        class_weight='balanced')
-            rf.fit(scaler.fit_transform(X[cv_idx]), y[cv_idx])
-            proba = rf.predict_proba(scaler.transform(X[test_idx]))[:, 1]
-            test_acc.append(balanced_accuracy_score(y[test_idx], rf.predict(scaler.transform(X[test_idx]))))
+            m = make_probe(probe, "classification", seed).fit(X[cv_idx], y[cv_idx])
+            proba = m.predict_proba(X[test_idx])[:, 1]
+            test_acc.append(balanced_accuracy_score(y[test_idx], m.predict(X[test_idx])))
             test_auc.append(roc_auc_score(y[test_idx], proba))
 
         results[model] = {
@@ -75,7 +102,7 @@ def run_classification(X_dict, y, test_size=0.1, task_name="Classification"):
     return results
 
 
-def run_regression(X_dict, y, test_size=0.1, task_name="Regression"):
+def run_regression(X_dict, y, test_size=0.1, task_name="Regression", probe="rf"):
     print(f"\n{task_name}")
     results = {}
     for model, X in X_dict.items():
@@ -90,20 +117,14 @@ def run_regression(X_dict, y, test_size=0.1, task_name="Regression"):
             kf = KFold(n_splits=5, shuffle=True, random_state=seed)
             for train_rel, val_rel in kf.split(cv_idx):
                 train_idx, val_idx = cv_idx[train_rel], cv_idx[val_rel]
-                scaler = StandardScaler()
-                rf = RandomForestRegressor(n_estimators=200, max_depth=6, min_samples_split=5,
-                                           random_state=seed, n_jobs=-1)
-                rf.fit(scaler.fit_transform(X[train_idx]), y[train_idx])
-                pred = rf.predict(scaler.transform(X[val_idx]))
+                m = make_probe(probe, "regression", seed).fit(X[train_idx], y[train_idx])
+                pred = m.predict(X[val_idx])
                 cv_mae.append(mean_absolute_error(y[val_idx], pred))
                 cv_r2.append(r2_score(y[val_idx], pred))
 
             # ---- dots: held-out test for this seed ----
-            scaler = StandardScaler()
-            rf = RandomForestRegressor(n_estimators=200, max_depth=6, min_samples_split=5,
-                                       random_state=seed, n_jobs=-1)
-            rf.fit(scaler.fit_transform(X[cv_idx]), y[cv_idx])
-            pred = rf.predict(scaler.transform(X[test_idx]))
+            m = make_probe(probe, "regression", seed).fit(X[cv_idx], y[cv_idx])
+            pred = m.predict(X[test_idx])
             test_mae.append(mean_absolute_error(y[test_idx], pred))
             test_r2.append(r2_score(y[test_idx], pred))
 
@@ -165,24 +186,24 @@ def load_aligned(features_path, labels_path, task, model_name=None):
     return model_name, X, y, n_kept
 
 
-def score(features_path, labels_path, dataset, task, model_name=None):
+def score(features_path, labels_path, dataset, task, model_name=None, probe="rf"):
     model_name, X, y, n = load_aligned(features_path, labels_path, task, model_name)
     print(f"Scoring '{model_name}' on {dataset}/{task}: "
-          f"{n} subjects, {X.shape[1]}-d features")
+          f"{n} subjects, {X.shape[1]}-d features, {probe} probe")
 
     ttype = TASK_TYPE[task]
     if ttype == "classification":
         y = y.astype(int)
-        r = run_classification({model_name: X}, y, task_name=f"{dataset} {task}")[model_name]
-        row = {"dataset": dataset, "task": task, "model": model_name,
+        r = run_classification({model_name: X}, y, task_name=f"{dataset} {task}", probe=probe)[model_name]
+        row = {"dataset": dataset, "task": task, "model": model_name, "probe": probe,
                "test_acc_mean": r["test_acc_mean"], "test_acc_std": r["test_acc_std"],
                "test_auc_mean": r["test_auc_mean"], "test_auc_std": r["test_auc_std"],
                "test_acc_seeds": r["test_acc_seeds"], "test_auc_seeds": r["test_auc_seeds"],
                "cv_acc_values": r["cv_acc_values"], "cv_auc_values": r["cv_auc_values"]}
     else:
         y = y.astype(float)
-        r = run_regression({model_name: X}, y, task_name=f"{dataset} {task}")[model_name]
-        row = {"dataset": dataset, "task": task, "model": model_name,
+        r = run_regression({model_name: X}, y, task_name=f"{dataset} {task}", probe=probe)[model_name]
+        row = {"dataset": dataset, "task": task, "model": model_name, "probe": probe,
                "test_mae_mean": r["test_mae_mean"], "test_mae_std": r["test_mae_std"],
                "test_r2_mean": r["test_r2_mean"], "test_r2_std": r["test_r2_std"],
                "test_mae_seeds": r["test_mae_seeds"], "test_r2_seeds": r["test_r2_seeds"],
@@ -197,9 +218,10 @@ def main():
     p.add_argument("--dataset", required=True, choices=["NKI", "HBN"])
     p.add_argument("--task", required=True, choices=list(TASK_TYPE.keys()))
     p.add_argument("--model-name", default=None)
+    p.add_argument("--probe", default="rf", choices=list(PROBES))
     args = p.parse_args()
     try:
-        row = score(args.features, args.labels, args.dataset, args.task, args.model_name)
+        row = score(args.features, args.labels, args.dataset, args.task, args.model_name, args.probe)
     except Exception as e:
         print(f"SCORING FAILED: {e}")
         return 1

@@ -60,8 +60,8 @@ initiative:
 - **NKI** — Nathan Kline Institute Rockland Sample (958 subjects)
 - **HBN** — Healthy Brain Network (997 subjects)
 
-Models are evaluated across three tasks: **sex** classification (balanced accuracy) and **age** / **BMI**
-regression (mean absolute error). Preprocessing is [turboprep](https://github.com/LemuelPuglisi/turboprep) by default, with
+Models are evaluated across three tasks: **sex** classification (balanced accuracy and AUC) and **age** / **BMI**
+regression (mean absolute error and R²). Preprocessing is [turboprep](https://github.com/LemuelPuglisi/turboprep) by default, with
 [CAT12](https://neuro-jena.github.io/cat/) also available.
 
 ## How it works
