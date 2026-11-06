@@ -2,7 +2,7 @@
 
 BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#versioning).
 
-## v1.1.0, unreleased
+## v1.1.0, 2026-11-06
 
 - Preprocessing: added `turboprep-affine`, turboprep with affine registration to MNI 1 mm
 - Results: un-CNN, Dinov3D neuro, BrainIAC, SwinBrain and 3D Neuro SimCLR on `turboprep-affine`
