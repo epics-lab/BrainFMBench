@@ -10,6 +10,10 @@ on:
         description: "Rescore every model. Leave off to only rebuild the leaderboard and site."
         type: boolean
         default: false
+      slugs:
+        description: "Space separated model folders to score, e.g. from cluster-extract. Empty means none."
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -42,7 +46,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" != "push" ]; then
             echo "all=${{ inputs.rescore_all }}" >> "$GITHUB_OUTPUT"
-            echo "slugs=" >> "$GITHUB_OUTPUT"; exit 0
+            echo "slugs=${{ inputs.slugs }}" >> "$GITHUB_OUTPUT"; exit 0
           fi
           BEFORE="${{ github.event.before }}"
           if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
