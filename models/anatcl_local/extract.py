@@ -289,7 +289,27 @@ def _prepare(path):
     return torch.from_numpy(img.copy()).float()[None]
 
 
+def _alias_pickled_modules():
+    # The AnatCL checkpoints pickle classes from the training code (models.estimators.AgeEstimator).
+    # Register placeholder modules so torch.load can unpickle them, as the paper extraction did.
+    import sys
+    import types
+    if "models.estimators" in sys.modules:
+        return
+    pkg = types.ModuleType("models")
+    pkg.__path__ = []
+    resnet = types.ModuleType("models.resnet3d")
+    resnet.__dict__.update({k: v for k, v in globals().items() if isinstance(v, type)})
+    est = types.ModuleType("models.estimators")
+    est.AgeEstimator = type("AgeEstimator", (), {})
+    pkg.resnet3d, pkg.estimators = resnet, est
+    sys.modules.setdefault("models", pkg)
+    sys.modules.setdefault("models.resnet3d", resnet)
+    sys.modules.setdefault("models.estimators", est)
+
+
 def _load(path):
+    _alias_pickled_modules()
     enc = SupConResNet("resnet18", feat_dim=128, use_head=False)
     enc.load_state_dict(torch.load(path, map_location="cpu", weights_only=False)["model"])
     return enc.eval()
