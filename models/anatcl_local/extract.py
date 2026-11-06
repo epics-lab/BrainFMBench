@@ -2,7 +2,7 @@
 
 Input preparation follows the extraction used for the MedAGI 2026 paper and the AnatCL README:
 CAT12 VBM grey matter map (mwp1), resized to 121 x 128 x 121 if needed, no further normalization.
-Weights: weights_local_fold{0..4}.pth, AnatCL checkpoints from https://github.com/carloalbertobarbano/AnatCL
+Weights: weights_local_fold{0..4}.pth, AnatCL checkpoints from https://github.com/EIDOSLAB/AnatCL
 The ResNet and SupConResNet code below is copied from anatcl/models/resnet3d.py,
 Copyright (c) 2021 EIDOSlab, MIT License.
 """
