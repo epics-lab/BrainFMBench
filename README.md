@@ -23,16 +23,19 @@ _Held out test, mean ± std over 5 seeds. There is no single overall score; sort
 | Probe | Model | Preprocessing | HBN Sex (acc ↑) | HBN Age (MAE ↓) | HBN BMI (MAE ↓) | NKI Sex (acc ↑) | NKI Age (MAE ↓) | NKI BMI (MAE ↓) |
 |---|---|---|---|---|---|---|---|---|
 | RandomForest | 3D-Neuro-SimCLR | turboprep | 0.768 ± 0.049 | 1.64 ± 0.12 | 3.02 ± 0.29 | 0.835 ± 0.023 | 5.86 ± 0.58 | 3.52 ± 0.17 |
+| RandomForest | 3D-Neuro-SimCLR | turboprep-affine | 0.671 ± 0.050 | **1.41 ± 0.10** | 2.93 ± 0.26 | 0.746 ± 0.058 | 5.26 ± 0.30 | 2.71 ± 0.21 |
 | RandomForest | AnatCL (Global) | cat12 | 0.723 ± 0.060 | 1.78 ± 0.18 | 3.39 ± 0.33 | 0.738 ± 0.031 | 6.26 ± 0.43 | 3.92 ± 0.22 |
 | RandomForest | AnatCL (Local) | cat12 | 0.707 ± 0.063 | 1.85 ± 0.10 | 3.34 ± 0.40 | 0.765 ± 0.024 | 6.19 ± 0.47 | 3.92 ± 0.25 |
 | RandomForest | Brain2Vec | raw | 0.727 ± 0.048 | 1.49 ± 0.09 | 3.01 ± 0.27 | 0.856 ± 0.044 | **4.83 ± 0.43** | 2.98 ± 0.28 |
 | RandomForest | BrainIAC | turboprep | 0.744 ± 0.034 | 2.61 ± 0.07 | 3.59 ± 0.49 | 0.810 ± 0.031 | 13.96 ± 0.59 | 4.16 ± 0.25 |
+| RandomForest | BrainIAC | turboprep-affine | 0.604 ± 0.065 | 2.53 ± 0.06 | 3.52 ± 0.41 | 0.566 ± 0.043 | 13.36 ± 0.69 | 4.01 ± 0.19 |
 | RandomForest | Dinov3D-neuro | turboprep | 0.696 ± 0.041 | 1.96 ± 0.11 | 3.23 ± 0.27 | 0.757 ± 0.045 | 8.29 ± 0.57 | 3.69 ± 0.12 |
 | RandomForest | Dinov3D-neuro | turboprep-affine | 0.634 ± 0.028 | 2.16 ± 0.16 | 3.39 ± 0.39 | 0.674 ± 0.047 | 8.86 ± 0.30 | 3.72 ± 0.20 |
 | RandomForest | FS aparc | freesurfer | 0.740 ± 0.034 | 2.13 ± 0.17 | 3.51 ± 0.31 | 0.770 ± 0.023 | 9.09 ± 0.63 | 3.99 ± 0.36 |
 | RandomForest | FS Schaefer | freesurfer | 0.736 ± 0.028 | 2.16 ± 0.19 | 3.44 ± 0.31 | 0.740 ± 0.016 | 8.29 ± 0.38 | 3.99 ± 0.35 |
 | RandomForest | SwinBrain | turboprep | 0.744 ± 0.038 | 2.39 ± 0.11 | 3.41 ± 0.36 | 0.855 ± 0.023 | 9.47 ± 0.54 | 3.97 ± 0.20 |
-| RandomForest | un-CNN † | turboprep | **0.772 ± 0.043** | **1.42 ± 0.08** | **2.70 ± 0.33** | **0.857 ± 0.032** | 5.11 ± 0.22 | 3.13 ± 0.11 |
+| RandomForest | SwinBrain | turboprep-affine | 0.661 ± 0.040 | 2.13 ± 0.05 | 3.27 ± 0.38 | 0.684 ± 0.043 | 9.02 ± 0.31 | 3.95 ± 0.21 |
+| RandomForest | un-CNN † | turboprep | **0.772 ± 0.043** | 1.42 ± 0.08 | **2.70 ± 0.33** | **0.857 ± 0.032** | 5.11 ± 0.22 | 3.13 ± 0.11 |
 | RandomForest | un-CNN † | turboprep-affine | 0.692 ± 0.027 | 1.44 ± 0.05 | 2.77 ± 0.21 | 0.812 ± 0.029 | 5.37 ± 0.51 | **2.60 ± 0.15** |
 
 _Bold: best per column within each probe._
