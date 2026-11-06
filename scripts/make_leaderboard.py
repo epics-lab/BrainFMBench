@@ -297,49 +297,78 @@ def _box_stats(v):
     return q1, med, q3, v[v >= q1 - 1.5 * iqr].min(), v[v <= q3 + 1.5 * iqr].max()
 
 
-def make_interactive(table, out_html, extra_html=""):
+PREP_SHORT = {"turboprep-affine": "affine"}
+
+
+def _ilabel(m, prep, primary):
+    """x label: model name, plus the preprocessing when it is not the model's primary one."""
+    lbl = DISPLAY_NAMES.get(m, m).replace("\n", "<br>")
+    return lbl if prep == primary.get(m) else f"{lbl}<br><i>{PREP_SHORT.get(prep, prep)}</i>"
+
+
+def make_interactive(itable, out_html, extra_html=""):
+    """itable: {(probe, model, preprocessing, dataset): {task: row}}. Every (probe, model,
+    preprocessing) gets its own traces; dropdowns above the plot pick the probe and the
+    preprocessing, and the same selection filters the table below."""
+    import json as _json
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
 
-    order, colors = _order_and_colors(table)
+    order, colors = _order_and_colors({(m, ds): v for (_p, m, _pp, ds), v in itable.items()})
+    probes = [p for p, _ in PROBES if any(k[0] == p for k in itable)]
+    preps = sorted({k[2] for k in itable})
+    # a model's primary preprocessing is the one that is not turboprep-affine (its original)
+    primary = {}
+    for (_p, m, pp, _ds) in sorted(itable, key=lambda k: k[2] == "turboprep-affine"):
+        primary.setdefault(m, pp)
+    default_probe = "rf" if "rf" in probes else probes[0]
+
     ncol = len(DATASETS)
     fig = make_subplots(rows=len(BOX_ROWS), cols=ncol,
                         subplot_titles=DATASETS + [""] * ncol * (len(BOX_ROWS) - 1),
                         horizontal_spacing=0.05, vertical_spacing=0.09)
     in_legend = set()
-
+    default_cats = {}
     for r, (row_label, task, is_cls, metric_ylabel, box_key, dot_key) in enumerate(BOX_ROWS, 1):
         for c, ds in enumerate(DATASETS, 1):
-            cats = []
-            for m in order:
-                row = table.get((m, ds), {}).get(task)
-                if not row or not row.get(box_key):
-                    continue
-                lbl = DISPLAY_NAMES.get(m, m).replace("\n", "<br>")
-                cats.append(lbl)
-                rgb = _mcolors.to_rgb(colors[m])
-                fill = "rgba(%d,%d,%d,0.55)" % tuple(int(255 * x) for x in rgb)
-                q1, med, q3, lo, hi = _box_stats(np.asarray(row[box_key], float))
-                fig.add_trace(go.Box(
-                    x=[lbl], q1=[q1], median=[med], q3=[q3], lowerfence=[lo], upperfence=[hi],
-                    name=m, legendgroup=m, showlegend=m not in in_legend,
-                    fillcolor=fill, line=dict(color=colors[m], width=1.5),
-                ), row=r, col=c)
-                in_legend.add(m)
+            for probe in probes:
+                for m in order:
+                    for pp in sorted({k[2] for k in itable if k[0] == probe and k[1] == m},
+                                     key=lambda x: (x != primary.get(m), x)):
+                        row = itable.get((probe, m, pp, ds), {}).get(task)
+                        if not row or not row.get(box_key):
+                            continue
+                        lbl = _ilabel(m, pp, primary)
+                        vis = probe == default_probe
+                        if vis:
+                            default_cats.setdefault((r, c), []).append(lbl)
+                        rgb = _mcolors.to_rgb(colors[m])
+                        alpha = 0.55 if pp == primary.get(m) else 0.2
+                        fill = "rgba(%d,%d,%d,%s)" % (tuple(int(255 * x) for x in rgb) + (alpha,))
+                        tag = dict(probe=probe, prep=pp)
+                        q1, med, q3, lo, hi = _box_stats(np.asarray(row[box_key], float))
+                        show = vis and m not in in_legend
+                        fig.add_trace(go.Box(
+                            x=[lbl], q1=[q1], median=[med], q3=[q3], lowerfence=[lo], upperfence=[hi],
+                            name=m, legendgroup=m, showlegend=show, visible=vis, meta=tag,
+                            fillcolor=fill, line=dict(color=colors[m], width=1.5),
+                        ), row=r, col=c)
+                        if show:
+                            in_legend.add(m)
+                        hvals = row.get(dot_key) or []
+                        if hvals:
+                            fig.add_trace(go.Box(
+                                x=[lbl] * len(hvals), y=hvals, name=m, legendgroup=m, showlegend=False,
+                                visible=vis, meta=tag,
+                                boxpoints="all", jitter=0.5, pointpos=0, hoveron="points",
+                                fillcolor="rgba(0,0,0,0)", line=dict(color="rgba(0,0,0,0)"),
+                                marker=dict(color=colors[m], size=8, line=dict(color="black", width=1)),
+                                text=[f"seed {s_}" for s_ in SEEDS[:len(hvals)]],
+                                hovertemplate=f"<b>{m}</b> · {pp} · {probe}<br>held out test, %{{text}}<br>"
+                                              f"{metric_ylabel}: %{{y:.3f}}<extra></extra>",
+                            ), row=r, col=c)
 
-                hvals = row.get(dot_key) or []
-                if hvals:
-                    fig.add_trace(go.Box(
-                        x=[lbl] * len(hvals), y=hvals, name=m, legendgroup=m, showlegend=False,
-                        boxpoints="all", jitter=0.5, pointpos=0, hoveron="points",
-                        fillcolor="rgba(0,0,0,0)", line=dict(color="rgba(0,0,0,0)"),
-                        marker=dict(color=colors[m], size=8, line=dict(color="black", width=1)),
-                        text=[f"seed {s}" for s in SEEDS[:len(hvals)]],
-                        hovertemplate=f"<b>{m}</b><br>held out test, %{{text}}<br>"
-                                      f"{metric_ylabel}: %{{y:.3f}}<extra></extra>",
-                    ), row=r, col=c)
-
-            fig.update_xaxes(categoryorder="array", categoryarray=cats, row=r, col=c)
+            fig.update_xaxes(categoryorder="array", categoryarray=default_cats.get((r, c), []), row=r, col=c)
             bv = dummy_baseline(ds, task, is_cls)
             if bv is not None and np.isfinite(bv):
                 fig.add_hline(y=bv, line=dict(color="#AAAAAA", dash="dot", width=2), row=r, col=c)
@@ -354,6 +383,7 @@ def make_interactive(table, out_html, extra_html=""):
         template="plotly_white", boxmode="overlay", height=430 * len(BOX_ROWS),
         title=dict(text="BrainFMBench leaderboard<br><sup>Boxes: 5 fold CV over 5 seeds. "
                         "Points: held out test per seed. Dotted line: chance or dummy baseline. "
+                        "Lighter boxes: a model's non default preprocessing. "
                         "Click legend entries to hide or show models.</sup>"),
         legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.06, yanchor="top"),
         margin=dict(l=90, r=20, t=110, b=60),
@@ -361,31 +391,80 @@ def make_interactive(table, out_html, extra_html=""):
 
     try:
         static = go.Figure(fig)
-        static.update_layout(title_text="BrainFMBench leaderboard", width=1300)
+        static.update_layout(title_text=f"BrainFMBench leaderboard ({dict(PROBES)[default_probe]})", width=1300)
         static.write_image(os.path.join(REPO, "leaderboard_boxplots.png"), scale=2)
         print("wrote plotly png")
     except Exception as e:
         print(f"plotly png export failed, keeping matplotlib png: {e}")
-    plot = fig.to_html(full_html=False, include_plotlyjs="cdn",
+
+    plot = fig.to_html(full_html=False, include_plotlyjs="cdn", div_id="lbplot",
                        config={"responsive": True, "displaylogo": False})
+    import html as _h
+    opt = lambda v, t, sel: f'<option value="{_h.escape(v)}"{" selected" if sel else ""}>{_h.escape(t)}</option>'
+    controls = (
+        '<div class="ctl"><label>Probe <select id="selProbe">'
+        + "".join(opt(p, dict(PROBES)[p], p == default_probe) for p in probes)
+        + '</select></label> <label>Preprocessing <select id="selPrep">'
+        + opt("all", "All", True) + "".join(opt(p, p, False) for p in preps)
+        + "</select></label></div>")
+    script = """<script>
+(function () {
+  var gd = document.getElementById('lbplot');
+  function apply() {
+    var probe = document.getElementById('selProbe').value;
+    var prep = document.getElementById('selPrep').value;
+    var vis = [], cats = {}, seen = {}, legend = [];
+    gd.data.forEach(function (t) {
+      var on = t.meta && t.meta.probe === probe && (prep === 'all' || t.meta.prep === prep);
+      vis.push(on);
+      var ax = (t.xaxis || 'x').replace('x', 'xaxis');
+      cats[ax] = cats[ax] || [];
+      if (on && t.q1 && cats[ax].indexOf(t.x[0]) < 0) cats[ax].push(t.x[0]);
+      var show = on && !!t.q1 && !seen[t.name];
+      if (show) seen[t.name] = true;
+      legend.push(show);
+    });
+    Plotly.restyle(gd, {visible: vis, showlegend: legend});
+    var lay = {};
+    Object.keys(cats).forEach(function (ax) { lay[ax + '.categoryarray'] = cats[ax]; });
+    Plotly.relayout(gd, lay);
+    document.querySelectorAll('#lb tbody').forEach(function (tb) {
+      var pOk = tb.dataset.probe === probe, any = false;
+      Array.from(tb.rows).forEach(function (r) {
+        if (r.classList.contains('grp')) return;
+        var on = pOk && (prep === 'all' || r.dataset.prep === prep);
+        r.style.display = on ? '' : 'none'; any = any || on;
+      });
+      tb.style.display = any ? '' : 'none';
+    });
+  }
+  document.getElementById('selProbe').addEventListener('change', apply);
+  document.getElementById('selPrep').addEventListener('change', apply);
+  if (window.Plotly && gd.data) apply(); else window.addEventListener('load', apply);
+})();
+</script>"""
     os.makedirs(os.path.dirname(out_html), exist_ok=True)
     with open(out_html, "w") as f:
         f.write(
             "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
             "<title>BrainFMBench Leaderboard</title>"
-            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}th.on{background:#e3e9f0}.arr{color:#889;font-size:0.85em;margin-left:4px}th.on .arr{color:#1a5fb4}th[data-col]:hover{background:#eaeef3}tr.grp th{background:#e8edf2;text-align:left;font-size:13px;letter-spacing:.02em}th.ds{text-align:center}td.best{font-weight:600}</style>"
+            "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}th.on{background:#e3e9f0}.arr{color:#889;font-size:0.85em;margin-left:4px}th.on .arr{color:#1a5fb4}th[data-col]:hover{background:#eaeef3}tr.grp th{background:#e8edf2;text-align:left;font-size:13px;letter-spacing:.02em}th.ds{text-align:center}td.best{font-weight:600}"
+            ".ctl{position:sticky;top:0;z-index:5;background:#fff;padding:8px 0;border-bottom:1px solid #eee;display:flex;gap:18px;flex-wrap:wrap}.ctl select{font-size:14px;padding:3px 6px;margin-left:6px}</style>"
             "</head><body>\n"
             "<p><a href=\"https://github.com/epics-lab/BrainFMBench\">epics-lab/BrainFMBench</a>"
             " &middot; auto generated from <code>models/*/results.json</code></p>\n"
-            + plot + "\n" + extra_html + "\n</body></html>\n")
+            + controls + "\n" + plot + "\n" + extra_html + "\n" + script + "\n</body></html>\n")
     print(f"Wrote {out_html}")
 
 
+# every task reports all of its metrics: (result key, label, decimals, higher is better)
+CLS_METRICS = [("test_acc", "bal acc", 3, True), ("test_auc", "AUC", 3, True)]
+REG_METRICS = [("test_mae", "MAE", 2, False), ("test_r2", "R²", 3, True)]
 TASK_TABLES = [
-    ("sex", "Sex classification", "balanced accuracy, higher is better", "test_acc", 3, True),
-    ("age", "Age prediction", "MAE in years, lower is better", "test_mae", 2, False),
-    ("bmi", "BMI prediction", "MAE, lower is better", "test_mae", 2, False),
+    ("sex", "Sex", CLS_METRICS),
+    ("age", "Age", REG_METRICS),
+    ("bmi", "BMI", REG_METRICS),
 ]
 
 
@@ -413,39 +492,46 @@ def _links(y):
 
 
 PROBES = [("linear", "Linear probe"), ("rf", "RandomForest probe")]
-TASK_SPEC = {task: dict(key=key, places=places, higher=higher, title=title)
-             for task, title, unit, key, places, higher in TASK_TABLES}
-SHORT = {"sex": "Sex (acc ↑)", "age": "Age (MAE ↓)", "bmi": "BMI (MAE ↓)"}
+TASK_TITLE = {task: title for task, title, _ in TASK_TABLES}
+METRIC = {(task, key): dict(label=label, places=places, higher=higher)
+          for task, _, metrics in TASK_TABLES for key, label, places, higher in metrics}
+
+
+def _mlabel(t, key):
+    m = METRIC[(t, key)]
+    return f"{m['label']} {'↑' if m['higher'] else '↓'}"
 
 
 def build_entries(rows, meta):
-    """One leaderboard row per (probe, model, preprocessing): {(dataset, task): (mean, text)}."""
+    """One leaderboard row per (probe, model, preprocessing): {(dataset, task, metric): (mean, text)}."""
     ent = {}
     for r in rows:
-        spec = TASK_SPEC.get(r.get("task"))
-        if spec is None:
-            continue
+        t = r.get("task")
         m = r["model"]
         prep = r.get("preprocessing") or meta.get(m, {}).get("preprocessing", "turboprep")
-        mu = r.get(spec["key"] + "_mean")
-        if mu is None:
-            continue
-        cell = (mu, fmt(mu, r.get(spec["key"] + "_std"), spec["places"]))
-        ent.setdefault((r.get("probe", "rf"), m, prep), {})[(r["dataset"], r["task"])] = cell
+        for (task, key), spec in METRIC.items():
+            if task != t or r.get(key + "_mean") is None:
+                continue
+            mu = r[key + "_mean"]
+            cell = (mu, fmt(mu, r.get(key + "_std"), spec["places"]))
+            ent.setdefault((r.get("probe", "rf"), m, prep), {})[(r["dataset"], t, key)] = cell
     return ent
 
 
-def _cols():
-    return [(ds, t) for ds in DATASETS for t, *_ in TASK_TABLES]
+def _cols(ent):
+    """(dataset, task, metric) columns that have at least one result."""
+    have = {c for cells in ent.values() for c in cells}
+    return [(ds, t, key) for ds in DATASETS for t, _, metrics in TASK_TABLES
+            for key, *_ in metrics if (ds, t, key) in have]
 
 
 def _best(ent):
-    """Best mean per (probe, dataset, task)."""
+    """Best mean per (probe, dataset, task, metric)."""
     best = {}
     for (probe, _m, _p), cells in ent.items():
-        for (ds, t), (mu, _txt) in cells.items():
-            k = (probe, ds, t)
-            hi = TASK_SPEC[t]["higher"]
+        for (ds, t, key), (mu, _txt) in cells.items():
+            k = (probe, ds, t, key)
+            hi = METRIC[(t, key)]["higher"]
             if k not in best or (mu > best[k] if hi else mu < best[k]):
                 best[k] = mu
     return best
@@ -456,17 +542,18 @@ def _probe_keys(ent, probe):
 
 
 def task_tables_md(ent, meta):
-    cols, best = _cols(), _best(ent)
-    lines = ["| Probe | Model | Preprocessing | " + " | ".join(f"{ds} {SHORT[t]}" for ds, t in cols) + " |",
+    cols, best = _cols(ent), _best(ent)
+    lines = ["| Probe | Model | Preprocessing | "
+             + " | ".join(f"{ds} {TASK_TITLE[t]} {_mlabel(t, key)}" for ds, t, key in cols) + " |",
              "|---|---|---|" + "---|" * len(cols)]
     for probe, label in PROBES:
         for k in _probe_keys(ent, probe):
             _, m, prep = k
             name = m + (" †" if meta.get(m, {}).get("note") else "")
             vals = []
-            for ds, t in cols:
-                mu, txt = ent[k].get((ds, t), (None, "-"))
-                vals.append(f"**{txt}**" if mu is not None and mu == best.get((probe, ds, t)) else txt)
+            for c in cols:
+                mu, txt = ent[k].get(c, (None, "-"))
+                vals.append(f"**{txt}**" if mu is not None and mu == best.get((probe,) + c) else txt)
             lines.append(f"| {label.split()[0]} | {name} | {prep} | " + " | ".join(vals) + " |")
     return lines + ["", "_Bold: best per column within each probe._", ""]
 
@@ -487,35 +574,41 @@ def models_md(meta, present):
 def tables_html(ent, meta, present):
     import html as _h
     e = _h.escape
-    cols, best = _cols(), _best(ent)
+    cols, best = _cols(ent), _best(ent)
     ncol = 2 + len(cols)
-    ntask = len(TASK_TABLES)
+    span = lambda pred: sum(1 for c in cols if pred(c))
+    ds_hdr = [ds for ds in DATASETS if span(lambda c: c[0] == ds)]
+    task_hdr = [(ds, t) for ds in ds_hdr for t, *_ in TASK_TABLES if span(lambda c: c[:2] == (ds, t))]
     out = ["<h2>Leaderboard</h2>",
            "<p class=\"sub\">Held out test, mean ± std over 5 seeds. Rows are grouped by probe; "
            "click a column to sort within each probe, click again to reverse. Bold marks the best "
            "value per column within a probe. There is no single overall score.</p>",
            "<table id=\"lb\"><thead><tr>"
-           "<th rowspan=\"2\" data-col=\"0\" data-dir=\"1\">Model <span class=\"arr\">&#8645;</span></th>"
-           "<th rowspan=\"2\" data-col=\"1\" data-dir=\"1\">Preprocessing <span class=\"arr\">&#8645;</span></th>"
-           + "".join(f"<th colspan=\"{ntask}\" class=\"ds\">{e(ds)}</th>" for ds in DATASETS) + "</tr><tr>"
-           + "".join(f"<th data-col=\"{k}\" data-dir=\"{-1 if TASK_SPEC[t]['higher'] else 1}\">"
-                     f"{e(SHORT[t])} <span class=\"arr\">&#8645;</span></th>"
-                     for k, (ds, t) in enumerate(cols, 2)) + "</tr></thead>"]
+           "<th rowspan=\"3\" data-col=\"0\" data-dir=\"1\">Model <span class=\"arr\">&#8645;</span></th>"
+           "<th rowspan=\"3\" data-col=\"1\" data-dir=\"1\">Preprocessing <span class=\"arr\">&#8645;</span></th>"
+           + "".join(f"<th colspan=\"{span(lambda c: c[0] == ds)}\" class=\"ds\">{e(ds)}</th>" for ds in ds_hdr)
+           + "</tr><tr>"
+           + "".join(f"<th colspan=\"{span(lambda c: c[:2] == (ds, t))}\" class=\"ds\">{e(TASK_TITLE[t])}</th>"
+                     for ds, t in task_hdr)
+           + "</tr><tr>"
+           + "".join(f"<th data-col=\"{k}\" data-dir=\"{-1 if METRIC[(t, key)]['higher'] else 1}\">"
+                     f"{e(_mlabel(t, key))} <span class=\"arr\">&#8645;</span></th>"
+                     for k, (ds, t, key) in enumerate(cols, 2)) + "</tr></thead>"]
     for probe, label in PROBES:
         keys = _probe_keys(ent, probe)
         if not keys:
             continue
-        out.append(f"<tbody><tr class=\"grp\"><th colspan=\"{ncol}\">{e(label)}</th></tr>")
+        out.append(f"<tbody data-probe=\"{e(probe)}\"><tr class=\"grp\"><th colspan=\"{ncol}\">{e(label)}</th></tr>")
         for k in keys:
             _, m, prep = k
             name = e(m) + (" &dagger;" if meta.get(m, {}).get("note") else "")
             tds = []
-            for ds, t in cols:
-                mu, txt = ent[k].get((ds, t), (None, "-"))
+            for c in cols:
+                mu, txt = ent[k].get(c, (None, "-"))
                 key = "" if mu is None else repr(mu)
-                cls = ' class="best"' if mu is not None and mu == best.get((probe, ds, t)) else ""
+                cls = ' class="best"' if mu is not None and mu == best.get((probe,) + c) else ""
                 tds.append(f"<td data-v=\"{key}\"{cls}>{e(txt)}</td>")
-            out.append(f"<tr><td data-v=\"{e(m.lower())}\">{name}</td>"
+            out.append(f"<tr data-prep=\"{e(prep)}\"><td data-v=\"{e(m.lower())}\">{name}</td>"
                        f"<td data-v=\"{e(prep)}\">{e(prep)}</td>{''.join(tds)}</tr>")
         out.append("</tbody>")
     out.append("</table>")
@@ -559,11 +652,13 @@ document.querySelectorAll('#lb th[data-col]').forEach(function (th) {
 
 def main():
     rows = load_rows()
-    table = {}
+    table, itable = {}, {}
     for r in rows:
-        if r.get("probe", "rf") != "rf":   # figures show the RandomForest probe
-            continue
-        table.setdefault((r["model"], r["dataset"]), {})[r["task"]] = r
+        prep = r.get("preprocessing", "turboprep")
+        itable.setdefault((r.get("probe", "rf"), r["model"], prep, r["dataset"]), {})[r["task"]] = r
+        # the static matplotlib figure keeps the RandomForest probe on each model's original preprocessing
+        if r.get("probe", "rf") == "rf" and prep != "turboprep-affine":
+            table.setdefault((r["model"], r["dataset"]), {})[r["task"]] = r
 
     display = []
     for (model, dataset), tasks in table.items():
@@ -590,7 +685,7 @@ def main():
     present = {m for (m, _ds) in table}
     ent = build_entries(rows, meta)
     try:
-        make_interactive(table, os.path.join(REPO, "site", "index.html"),
+        make_interactive(itable, os.path.join(REPO, "site", "index.html"),
                          tables_html(ent, meta, present))
     except Exception as e:
         import traceback; traceback.print_exc()
@@ -598,8 +693,8 @@ def main():
 
     lines = [
         "# BrainFMBench Leaderboard", "",
-        "Downstream probing of frozen features (RandomForest, held-out test).",
-        "Sex = balanced accuracy (higher is better); Age / BMI = MAE (lower is better).", "",
+        "Downstream probing of frozen features with a linear and a RandomForest probe, held out test. The static figure shows the RandomForest probe; the interactive site switches probe and preprocessing.",
+        "Classification reports balanced accuracy and AUC; regression reports MAE and R². Arrows mark the better direction.", "",
     ]
     if fig_ok:
         lines += [

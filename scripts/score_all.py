@@ -9,7 +9,8 @@ Convention:
 
 Usage:
   python scripts/score_all.py models/uncnn
-  python scripts/score_all.py models/uncnn HBN age   # one pair -> results.HBN.age.json
+  python scripts/score_all.py models/uncnn HBN age          # one pair, every probe
+  python scripts/score_all.py models/uncnn HBN age linear   # -> results.HBN.age.linear.json
 """
 import json
 import os
@@ -19,7 +20,7 @@ import yaml
 # make eval/scorer.py importable
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(REPO, "eval"))
-from scorer import score, TASK_TYPE  # noqa: E402
+from scorer import score, TASK_TYPE, PROBES  # noqa: E402
 
 
 def find_features(model_dir, dataset):
@@ -31,11 +32,15 @@ def find_features(model_dir, dataset):
 
 
 def main():
-    if len(sys.argv) not in (2, 4):
-        print("usage: score_all.py <model_dir> [<dataset> <task>]")
+    if len(sys.argv) not in (2, 4, 5):
+        print("usage: score_all.py <model_dir> [<dataset> <task> [<probe>]]")
         return 2
     model_dir = sys.argv[1].rstrip("/")
     only = sys.argv[2:4]
+    probes = [sys.argv[4]] if len(sys.argv) == 5 else list(PROBES)
+    if any(p not in PROBES for p in probes):
+        print(f"unknown probe {probes[0]!r}; allowed: {list(PROBES)}")
+        return 1
 
     meta = yaml.safe_load(open(os.path.join(model_dir, "model.yaml")))
     name = meta.get("name", os.path.basename(model_dir))
@@ -65,17 +70,23 @@ def main():
             failures.append(f"{ds}: no labels file at labels/{ds}.csv")
             continue
         for task in tasks:
-            try:
-                row = score(feats, labels, ds, task, model_name=name)
-                row.update(probe="rf", preprocessing=meta.get("preprocessing", "turboprep"))
-                rows.append(row)
-            except Exception as e:
-                failures.append(f"{ds}/{task}: {e}")
+            for probe in probes:
+                try:
+                    row = score(feats, labels, ds, task, model_name=name, probe=probe)
+                    row["preprocessing"] = meta.get("preprocessing", "turboprep")
+                    rows.append(row)
+                except Exception as e:
+                    failures.append(f"{ds}/{task}/{probe}: {e}")
 
     print("\n==== RESULTS ====")
     for r in rows:
         print(json.dumps(r))
-    out = os.path.join(model_dir, "results.%s.%s.json" % tuple(only) if only else "results.json")
+    if only and len(probes) == 1:
+        out = os.path.join(model_dir, "results.%s.%s.%s.json" % (only[0], only[1], probes[0]))
+    elif only:
+        out = os.path.join(model_dir, "results.%s.%s.json" % tuple(only))
+    else:
+        out = os.path.join(model_dir, "results.json")
     json.dump(rows, open(out, "w"), indent=2)
     print(f"\nWrote {out}  ({len(rows)} rows)")
 
