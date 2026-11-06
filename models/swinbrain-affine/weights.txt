@@ -1,0 +1,2 @@
+# Brain_Swin_UNETR.pth from the Google Drive link in https://github.com/MAI-Lab-West-China-Hospital/SwinBrain
+# Not a direct download, so it is staged on the cluster by the maintainers.

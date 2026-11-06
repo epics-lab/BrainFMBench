@@ -1,0 +1,26 @@
+name: 3D-Neuro-SimCLR
+authors:
+  - Kaczmarek, E., et al.
+submitted_by: Encin, Arel
+description: 3D SimCLR self-supervised foundation model across neurological diseases (ResNet-18 encoder)
+preprocessing: turboprep-affine
+preprocessing_label: "turboprep with affine registration to MNI 1 mm"
+embedding_dim: 512
+architecture: MONAI ResNet-18 (3D) SimCLR-pretrained encoder, projector removed
+citation: >-
+  Kaczmarek, E., et al. Building a general SimCLR self-supervised foundation model across
+  neurological diseases to advance 3D brain MRI diagnoses. Proceedings of the IEEE/CVF
+  International Conference on Computer Vision, pp. 1310-1319 (2025).
+paper: https://arxiv.org/abs/2509.10620
+code: https://github.com/emilykaczmarek/3D-Neuro-SimCLR
+weights: https://github.com/emilykaczmarek/3D-Neuro-SimCLR/releases/tag/v1.0.0
+cluster_only: true
+cpus: 2
+walltime: "6:00:00"
+datasets:
+  - NKI
+  - HBN
+tasks:
+  - sex
+  - age
+  - bmi

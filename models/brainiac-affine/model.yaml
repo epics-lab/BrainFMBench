@@ -1,0 +1,26 @@
+name: BrainIAC
+authors:
+  - Tak, D., et al.
+submitted_by: Encin, Arel
+description: BrainIAC generalizable brain MRI foundation model (ViT CLS token)
+preprocessing: turboprep-affine
+preprocessing_label: "turboprep with affine registration to MNI 1 mm"
+embedding_dim: 768
+architecture: MONAI ViT (96^3, patch 16), pretrained BrainIAC backbone; CLS-token embedding
+citation: >-
+  Tak, D., et al. A generalizable foundation model for analysis of human brain MRI.
+  Nature Neuroscience, pp. 1-12 (2026).
+paper: https://www.nature.com/articles/s41593-026-02202-6
+code: https://github.com/AIM-KannLab/BrainIAC
+weights: https://github.com/AIM-KannLab/BrainIAC#model-checkpoints
+weights_prestaged: true
+cluster_only: true
+cpus: 2
+walltime: "6:00:00"
+datasets:
+  - NKI
+  - HBN
+tasks:
+  - sex
+  - age
+  - bmi
