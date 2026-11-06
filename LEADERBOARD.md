@@ -33,8 +33,8 @@ _Bold: best per column within each probe._
 | Model | Preprocessing | Dim | Links |
 |---|---|---|---|
 | 3D-Neuro-SimCLR | turboprep | 512 | [paper](https://arxiv.org/abs/2509.10620) · [code](https://github.com/emilykaczmarek/3D-Neuro-SimCLR) |
-| AnatCL (Global) | cat12 | 512 | [paper](https://www.sciencedirect.com/science/article/pii/S0167865525003848) · [code](https://github.com/carloalbertobarbano/AnatCL) |
-| AnatCL (Local) | cat12 | 512 | [paper](https://www.sciencedirect.com/science/article/pii/S0167865525003848) · [code](https://github.com/carloalbertobarbano/AnatCL) |
+| AnatCL (Global) | cat12 | 512 | [paper](https://www.sciencedirect.com/science/article/pii/S0167865525003848) · [code](https://github.com/EIDOSLAB/AnatCL) |
+| AnatCL (Local) | cat12 | 512 | [paper](https://www.sciencedirect.com/science/article/pii/S0167865525003848) · [code](https://github.com/EIDOSLAB/AnatCL) |
 | Brain2Vec | Own pipeline: NiChart DLMUSE (DLICV skull stripping) + FSL FLIRT to the Brain2Vec template | 768 | [paper](https://arxiv.org/abs/2610.28411) · [model card](https://huggingface.co/cbica/Brain2Vec) · [code](https://github.com/CBICA/Brain2Vec) |
 | BrainIAC | turboprep | 768 | [paper](https://www.nature.com/articles/s41593-026-02202-6) · [code](https://github.com/AIM-KannLab/BrainIAC) |
 | Dinov3D-neuro | turboprep | 792 | [model card](https://huggingface.co/huggingbrain/Dinov3d-Neuro) |
