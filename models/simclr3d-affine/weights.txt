@@ -1,0 +1,1 @@
+https://github.com/emilykaczmarek/3D-Neuro-SimCLR/releases/download/v1.0.0/simclr_3d_brain_foundation.tar
