@@ -29,6 +29,9 @@ jobs:
         with:
           persist-credentials: true
 
+      # a queued run checks out the commit it was queued on; catch up before reaping
+      - run: git pull --ff-only origin main
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -60,26 +63,14 @@ jobs:
           set -o pipefail
           python cluster/cluster_runner.py | tee runner.log
 
-      - name: Score newly reaped models
-        env:
-          PYTHONUNBUFFERED: "1"
-        if: steps.runner.outputs.reaped != ''
-        run: |
-          pip install -r eval/requirements-scoring.txt
-          for slug in ${{ steps.runner.outputs.reaped }}; do
-            python scripts/score_all.py "models/$slug"
-          done
-          python scripts/make_leaderboard.py
-
-      - name: Commit reaped features + results + leaderboard
+      - name: Commit reaped features
         if: steps.runner.outputs.reaped != ''
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A models
-          git add LEADERBOARD.md leaderboard_boxplots.png README.md
           git diff --staged --quiet && exit 0
-          git commit -m "Cluster: add extracted features + scores [skip ci]"
+          git commit -m "Cluster: add extracted features [skip ci]"
           for i in 1 2 3; do
             git pull --rebase origin main && git push && exit 0
             echo "push attempt $i failed, retrying"
@@ -87,8 +78,9 @@ jobs:
           done
           echo "push failed after 3 attempts"; exit 1
 
-      - name: Rebuild leaderboard site
+      # scoring runs in score.yml as a parallel matrix (model x dataset x task x probe)
+      - name: Score reaped models
         if: steps.runner.outputs.reaped != ''
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run score.yml --ref main -R ${{ github.repository }} -f rescore_all=false
+        run: gh workflow run score.yml --ref main -R ${{ github.repository }} -f rescore_all=false -f slugs="${{ steps.runner.outputs.reaped }}"
