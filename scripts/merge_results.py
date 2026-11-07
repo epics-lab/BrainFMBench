@@ -33,7 +33,16 @@ def main():
         meta = yaml.safe_load(open(os.path.join(REPO, "models", model, "model.yaml")))
         rows = []
         for ds in meta["datasets"]:
+            # same rules as the plan step in score.yml: no features yet, or no label
+            # column for this task on this dataset, means no part is expected
+            if not any(os.path.isfile(os.path.join(REPO, "models", model, "features", ds + ext))
+                       for ext in (".csv", ".parquet")):
+                continue
+            with open(os.path.join(REPO, "labels", ds + ".csv")) as f:
+                cols = f.readline().strip().split(",")
             for task in meta["tasks"]:
+                if task not in cols:
+                    continue
                 for probe in PROBES:
                     if (model, ds, task, probe) not in parts:
                         print(f"missing part for {model} {ds}/{task}/{probe}")
