@@ -297,13 +297,17 @@ def _box_stats(v):
     return q1, med, q3, v[v >= q1 - 1.5 * iqr].min(), v[v <= q3 + 1.5 * iqr].max()
 
 
-PREP_SHORT = {"turboprep-affine": "affine"}
+# the plot and table show one turboprep variant at a time; models with their own
+# preprocessing (CAT12 for AnatCL, FreeSurfer, raw for Brain2Vec) appear in every view
+VIEW_PREPS = [("turboprep", "turboprep (rigid)"), ("turboprep-affine", "turboprep-affine")]
 
 
-def _ilabel(m, prep, primary):
-    """x label: model name, plus the preprocessing when it is not the model's primary one."""
-    lbl = DISPLAY_NAMES.get(m, m).replace("\n", "<br>")
-    return lbl if prep == primary.get(m) else f"{lbl}<br><i>{PREP_SHORT.get(prep, prep)}</i>"
+def _in_view(prep, view):
+    return prep == view or prep not in dict(VIEW_PREPS)
+
+
+def _ilabel(m):
+    return DISPLAY_NAMES.get(m, m).replace("\n", "<br>")
 
 
 def make_interactive(itable, out_html, extra_html=""):
@@ -317,10 +321,8 @@ def make_interactive(itable, out_html, extra_html=""):
     order, colors = _order_and_colors({(m, ds): v for (_p, m, _pp, ds), v in itable.items()})
     probes = [p for p, _ in PROBES if any(k[0] == p for k in itable)]
     preps = sorted({k[2] for k in itable})
-    # a model's primary preprocessing is the one that is not turboprep-affine (its original)
-    primary = {}
-    for (_p, m, pp, _ds) in sorted(itable, key=lambda k: k[2] == "turboprep-affine"):
-        primary.setdefault(m, pp)
+    views = [v for v, _ in VIEW_PREPS if any(k[2] == v for k in itable)] or [VIEW_PREPS[0][0]]
+    default_view = views[0]
     default_probe = "rf" if "rf" in probes else probes[0]
 
     ncol = len(DATASETS)
@@ -334,17 +336,16 @@ def make_interactive(itable, out_html, extra_html=""):
             for probe in probes:
                 for m in order:
                     for pp in sorted({k[2] for k in itable if k[0] == probe and k[1] == m},
-                                     key=lambda x: (x != primary.get(m), x)):
+                                     key=lambda x: x):
                         row = itable.get((probe, m, pp, ds), {}).get(task)
                         if not row or not row.get(box_key):
                             continue
-                        lbl = _ilabel(m, pp, primary)
-                        vis = probe == default_probe
+                        lbl = _ilabel(m)
+                        vis = probe == default_probe and _in_view(pp, default_view)
                         if vis:
                             default_cats.setdefault((r, c), []).append(lbl)
                         rgb = _mcolors.to_rgb(colors[m])
-                        alpha = 0.55 if pp == primary.get(m) else 0.2
-                        fill = "rgba(%d,%d,%d,%s)" % (tuple(int(255 * x) for x in rgb) + (alpha,))
+                        fill = "rgba(%d,%d,%d,0.55)" % tuple(int(255 * x) for x in rgb)
                         tag = dict(probe=probe, prep=pp)
                         q1, med, q3, lo, hi = _box_stats(np.asarray(row[box_key], float))
                         show = vis and m not in in_legend
@@ -382,8 +383,8 @@ def make_interactive(itable, out_html, extra_html=""):
     fig.update_layout(
         template="plotly_white", boxmode="overlay", height=430 * len(BOX_ROWS),
         title=dict(text="BrainFMBench leaderboard<br><sup>Boxes: 5 fold CV over 5 seeds. "
-                        "Points: held out test per seed. Dotted line: chance or dummy baseline. "
-                        "Lighter boxes: a model's non default preprocessing. "
+                        "Points: held out test per seed. Dotted line: chance or dummy baseline.<br>"
+                        "AnatCL (CAT12), FreeSurfer and Brain2Vec (raw) use their own preprocessing and appear in every view. "
                         "Click legend entries to hide or show models.</sup>"),
         legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.06, yanchor="top"),
         margin=dict(l=90, r=20, t=110, b=60),
@@ -391,7 +392,7 @@ def make_interactive(itable, out_html, extra_html=""):
 
     try:
         static = go.Figure(fig)
-        static.update_layout(title_text=f"BrainFMBench leaderboard ({dict(PROBES)[default_probe]})", width=1300)
+        static.update_layout(title_text=f"BrainFMBench leaderboard ({dict(PROBES)[default_probe]}, {dict(VIEW_PREPS)[default_view]})", width=1300)
         static.write_image(os.path.join(REPO, "leaderboard_boxplots.png"), scale=2)
         print("wrote plotly png")
     except Exception as e:
@@ -405,17 +406,18 @@ def make_interactive(itable, out_html, extra_html=""):
         '<div class="ctl"><label>Probe <select id="selProbe">'
         + "".join(opt(p, dict(PROBES)[p], p == default_probe) for p in probes)
         + '</select></label> <label>Preprocessing <select id="selPrep">'
-        + opt("all", "All", True) + "".join(opt(p, p, False) for p in preps)
+        + "".join(opt(v, dict(VIEW_PREPS)[v], v == default_view) for v in views)
         + "</select></label></div>")
     script = """<script>
 (function () {
   var gd = document.getElementById('lbplot');
+  var VIEWS = """ + _json.dumps([v for v, _ in VIEW_PREPS]) + """;
   function apply() {
     var probe = document.getElementById('selProbe').value;
     var prep = document.getElementById('selPrep').value;
     var vis = [], cats = {}, seen = {}, legend = [];
     gd.data.forEach(function (t) {
-      var on = t.meta && t.meta.probe === probe && (prep === 'all' || t.meta.prep === prep);
+      var on = t.meta && t.meta.probe === probe && (t.meta.prep === prep || VIEWS.indexOf(t.meta.prep) < 0);
       vis.push(on);
       var ax = (t.xaxis || 'x').replace('x', 'xaxis');
       cats[ax] = cats[ax] || [];
@@ -432,7 +434,7 @@ def make_interactive(itable, out_html, extra_html=""):
       var pOk = tb.dataset.probe === probe, any = false;
       Array.from(tb.rows).forEach(function (r) {
         if (r.classList.contains('grp')) return;
-        var on = pOk && (prep === 'all' || r.dataset.prep === prep);
+        var on = pOk && (r.dataset.prep === prep || VIEWS.indexOf(r.dataset.prep) < 0);
         r.style.display = on ? '' : 'none'; any = any || on;
       });
       tb.style.display = any ? '' : 'none';
