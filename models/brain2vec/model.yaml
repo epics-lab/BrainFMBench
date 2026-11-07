@@ -16,7 +16,7 @@ weights_prestaged: true
 venv_prestaged: true
 gpus: 1
 cpus: 8
-walltime: "24:00:00"
+walltime: "12:00:00"
 architecture: A 3D masked autoencoder with a 12 layer ViT encoder and an 8 layer ViT decoder. Embeddings are computed using the [CLS] token from the last encoder's head.
 code: https://github.com/CBICA/Brain2Vec
 weights: https://huggingface.co/cbica/Brain2Vec
