@@ -201,8 +201,8 @@ def _draw_boxes_core(ax, positions, box_data, box_colors, heldout_data, xpos, xl
 
 def make_boxplots(table, out_png):
     order, colors = _order_and_colors(table)
-    fig = plt.figure(figsize=(16, 20))
-    outer = GridSpec(3, 1, figure=fig, hspace=0.55,
+    fig = plt.figure(figsize=(16, 6.7 * len(BOX_ROWS)))
+    outer = GridSpec(len(BOX_ROWS), 1, figure=fig, hspace=0.55,
                      left=0.10, right=0.97, top=0.94, bottom=0.12)
 
     # shared sex y-limits
@@ -225,16 +225,19 @@ def make_boxplots(table, out_png):
     else:
         sex_ylim = (0.45, 0.95)
 
-    shared_sex_ax = None
-    wratios = [1, 1]
+    _row0_seen = set()
+    wratios = [1] * len(DATASETS)
     for row_i, (row_label, task, is_cls, metric_ylabel, box_key, dot_key) in enumerate(BOX_ROWS):
         inner = GridSpecFromSubplotSpec(1, len(DATASETS), subplot_spec=outer[row_i],
                                         wspace=0.05, width_ratios=wratios)
+        shared_sex_ax = None
+        have = [ds for ds in DATASETS if _collect_group(table, ds, box_key, dot_key, task, order, colors)[1]]
+        first_ds = have[0] if have else DATASETS[0]
         for col_i, ds in enumerate(DATASETS):
             p, d, c, h, xp, xl = _collect_group(table, ds, box_key, dot_key, task, order, colors)
 
             if is_cls:
-                if col_i == 0:
+                if shared_sex_ax is None:
                     ax = fig.add_subplot(inner[col_i]); shared_sex_ax = ax
                 else:
                     ax = fig.add_subplot(inner[col_i], sharey=shared_sex_ax)
@@ -245,8 +248,15 @@ def make_boxplots(table, out_png):
                 ax.set_visible(False); continue
 
             bv = dummy_baseline(ds, task, is_cls)
-            if is_cls:
+            if is_cls and task == "sex":
                 ylim = sex_ylim
+            elif is_cls:
+                vals = list(np.concatenate(d)) + [v for hv in h for v in hv]
+                if bv is not None and np.isfinite(bv):
+                    vals.append(bv)
+                lo, hi = min(vals), max(vals)
+                rng = hi - lo if hi > lo else 0.02
+                ylim = (lo - rng * 0.10, hi + rng * 0.20)
             else:
                 vals = list(np.concatenate(d))
                 for hv in h:
@@ -261,11 +271,12 @@ def make_boxplots(table, out_png):
             _draw_boxes_core(ax, p, d, c, h, xp, xl, bv=bv, ylim=ylim)
             ax.set_xlim(min(p) - 0.7, max(p) + 0.7)
 
-            if row_i == 0:
+            if row_i == 0 or ds not in _row0_seen:
+                _row0_seen.add(ds)
                 ax.text(0.5, 1.04, ds, transform=ax.transAxes,
                         ha="center", va="bottom", fontsize=DS_FS, fontweight="bold")
 
-            if col_i == 0:
+            if ds == first_ds:
                 ax.tick_params(axis="y", labelsize=YTICK_FS, left=True, labelleft=True)
                 ax.set_ylabel(row_label + "\n" + metric_ylabel,
                               fontsize=YTITLE_FS, weight="bold", labelpad=8, linespacing=1.5)
@@ -755,6 +766,10 @@ def main():
             n = len({(yaml.safe_load(open(os.path.join(os.path.dirname(r), "model.yaml"))) or {}).get("name", r)
                      for r in glob.glob(os.path.join(root, "models", "*", "results.json"))})
             c2 = re.sub(r"_Models-\d+-", f"_Models-{n}-", c)
+            c2 = re.sub(r"/Datasets-\d+-", f"/Datasets-{len(DATASETS)}-", c2)
+            preps = {(yaml.safe_load(open(p)) or {}).get("preprocessing")
+                     for p in glob.glob(os.path.join(root, "models", "*", "model.yaml"))} - {None, "freesurfer"}
+            c2 = re.sub(r"/Preprocessing_options-\d+-", f"/Preprocessing_options-{len(preps)}-", c2)
             if c2 != c:
                 open(readme, "w").write(c2)
                 print(f"Models badge -> {n}")
