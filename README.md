@@ -2,9 +2,13 @@
 [![bioRxiv](https://img.shields.io/badge/bioRxiv-Preprint-b31b1b?style=for-the-badge)](https://www.biorxiv.org/content/10.64898/2026.05.15.725427v4)
 [![Leaderboard](https://img.shields.io/badge/Leaderboard-Live-2e8b57?style=for-the-badge)](https://www.epics-lab.ca/BrainFMBench/)
 [![Submissions](https://img.shields.io/badge/Submissions-Open-6a5acd?style=for-the-badge&logo=github&logoColor=white)](CONTRIBUTING.md)
-[![License](https://img.shields.io/badge/License-MIT-0a7bbb?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT_code_%C2%B7_CC_BY--NC--SA_labels-0a7bbb?style=for-the-badge)](labels/README.md)
 [![Scoring](https://img.shields.io/github/actions/workflow/status/epics-lab/BrainFMBench/score.yml?style=for-the-badge&label=Scoring&logo=githubactions&logoColor=white)](https://github.com/epics-lab/BrainFMBench/actions/workflows/score.yml)
 [![Models](https://img.shields.io/badge/%F0%9F%A7%A0_Models-10-e67e22?style=for-the-badge)](LEADERBOARD.md)
+[![Datasets](https://img.shields.io/badge/Datasets-3-16a085?style=for-the-badge)](#tasks--data)
+[![Preprocessing](https://img.shields.io/badge/Preprocessing_options-4-8e44ad?style=for-the-badge)](CONTRIBUTING.md)
+[![Probes](https://img.shields.io/badge/Probes-RandomForest_%C2%B7_Linear-34495e?style=for-the-badge)](#scoring-protocol)
+[![Version](https://img.shields.io/github/v/tag/epics-lab/BrainFMBench?style=for-the-badge&label=Version)](CHANGELOG.md)
 
 # BrainFMBench
 
@@ -60,8 +64,10 @@ Model details, papers and model cards: [`LEADERBOARD.md`](LEADERBOARD.md#models)
 
 ## Leaderboard
 
-See [`LEADERBOARD.md`](LEADERBOARD.md) for the current ranking and the figure. Scores are downstream RandomForest probes of frozen
-features (5-fold CV across 5 seeds for the box, held-out test for the points).
+See [`LEADERBOARD.md`](LEADERBOARD.md) for the full table and the [interactive site](https://www.epics-lab.ca/BrainFMBench/)
+to switch between the RandomForest and linear probes and between rigid and affine turboprep.
+Scores come from probes on frozen features (5 fold CV across 5 seeds for the box, held out test
+for the points). Earlier versions stay browsable on the site; see [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Tasks & data
 
@@ -75,8 +81,10 @@ initiative:
 Labels are derived from RBC and distributed under CC BY-NC-SA 4.0; see [labels/README.md](labels/README.md).
 
 Tasks: **sex** classification (balanced accuracy and AUC), **age** / **BMI** regression (mean absolute
-error and R²) and, on PNC, **p factor zero vs nonzero** classification (balanced accuracy and AUC). Preprocessing is [turboprep](https://github.com/LemuelPuglisi/turboprep) by default, with
-[CAT12](https://neuro-jena.github.io/cat/) also available.
+error and R²) and, on PNC, **p factor zero vs nonzero** classification (balanced accuracy and AUC). Inputs are offered with four preprocessing options:
+[turboprep](https://github.com/LemuelPuglisi/turboprep) with rigid registration (default), turboprep with
+affine registration to MNI 1 mm, [CAT12](https://neuro-jena.github.io/cat/) gray matter maps, and the raw T1w
+for models with their own pipeline.
 
 ## How it works
 
@@ -100,7 +108,7 @@ BrainFMBench splits the work between a computing cluster and GitHub actions:
 
 ```
 models/<name>/          submitted models (model.yaml + features, or + extract.py)
-labels/<DS>.csv         shared task labels per dataset (subject_id, sex, age, bmi)
+labels/<DS>.csv         shared task labels per dataset (see labels/README.md)
 eval/scorer.py          the downstream probing protocol
 scripts/                scoring, leaderboard, and submission validation
 cluster/                the async cluster runner (reap/sow) + sbatch template
@@ -132,8 +140,10 @@ For each model / dataset / task, at the full training size:
 
 - **Box** = 5-fold cross-validation across 5 seeds (25 values)
 - **Points** = held-out test result for the same 5 seeds
-- RandomForest probe (200 trees, depth 6) on standardized features; balanced
-  accuracy for sex, MAE for age / BMI.
+- Two probes on the same splits: a RandomForest (200 trees, depth 6) and a linear probe
+  (ridge for regression, L2 logistic regression for classification, regularization chosen
+  by inner 5 fold CV on the training data)
+- Classification reports balanced accuracy and AUC; regression reports MAE and R²
 
 Dependencies are pinned (scikit-learn 1.7.1, numpy 2.4.2, pandas 2.2.3) so the
 leaderboard is reproducible run to run.
