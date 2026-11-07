@@ -322,7 +322,10 @@ def make_interactive(itable, out_html, extra_html=""):
     probes = [p for p, _ in PROBES if any(k[0] == p for k in itable)]
     preps = sorted({k[2] for k in itable})
     views = [v for v, _ in VIEW_PREPS if any(k[2] == v for k in itable)] or [VIEW_PREPS[0][0]]
-    default_view = views[0]
+    # affine is the default, toggled by a checkbox under the plot
+    default_view = "turboprep-affine" if "turboprep-affine" in views else views[0]
+    affine_models = [m for m in _order_and_colors({(m, ds): v for (_p, m, _pp, ds), v in itable.items()})[0]
+                     if any(k[1] == m and k[2] == "turboprep-affine" for k in itable)]
     default_probe = "rf" if "rf" in probes else probes[0]
 
     ncol = len(DATASETS)
@@ -383,8 +386,7 @@ def make_interactive(itable, out_html, extra_html=""):
     fig.update_layout(
         template="plotly_white", boxmode="overlay", height=430 * len(BOX_ROWS),
         title=dict(text="BrainFMBench leaderboard<br><sup>Boxes: 5 fold CV over 5 seeds. "
-                        "Points: held out test per seed. Dotted line: chance or dummy baseline.<br>"
-                        "AnatCL (CAT12), FreeSurfer and Brain2Vec (raw) use their own preprocessing and appear in every view. "
+                        "Points: held out test per seed. Dotted line: chance or dummy baseline. "
                         "Click legend entries to hide or show models.</sup>"),
         legend=dict(orientation="h", x=0.5, xanchor="center", y=-0.06, yanchor="top"),
         margin=dict(l=90, r=20, t=110, b=60),
@@ -405,16 +407,24 @@ def make_interactive(itable, out_html, extra_html=""):
     controls = (
         '<div class="ctl"><label>Probe <select id="selProbe">'
         + "".join(opt(p, dict(PROBES)[p], p == default_probe) for p in probes)
-        + '</select></label> <label>Preprocessing <select id="selPrep">'
-        + "".join(opt(v, dict(VIEW_PREPS)[v], v == default_view) for v in views)
         + "</select></label></div>")
+    names = ", ".join(_h.escape(DISPLAY_NAMES.get(m, m).replace("\n", " ")) for m in affine_models)
+    prep_ctl = "" if "turboprep-affine" not in views else (
+        '<div class="prepctl"><label><input type="checkbox" id="chkAffine"'
+        + (" checked" if default_view == "turboprep-affine" else "")
+        + '> <b>Affine registration</b> for turboprep models</label>'
+        + f'<div class="sub">Applies only to the models that take turboprep input ({names}): '
+        "checked shows turboprep with affine registration to MNI 1 mm, unchecked shows rigid turboprep. "
+        "AnatCL (CAT12), FreeSurfer and Brain2Vec (raw) use their own preprocessing and do not change. "
+        "The table below follows the same setting.</div></div>")
     script = """<script>
 (function () {
   var gd = document.getElementById('lbplot');
   var VIEWS = """ + _json.dumps([v for v, _ in VIEW_PREPS]) + """;
   function apply() {
     var probe = document.getElementById('selProbe').value;
-    var prep = document.getElementById('selPrep').value;
+    var chk = document.getElementById('chkAffine');
+    var prep = chk ? (chk.checked ? 'turboprep-affine' : 'turboprep') : VIEWS[0];
     var vis = [], cats = {}, seen = {}, legend = [];
     gd.data.forEach(function (t) {
       var on = t.meta && t.meta.probe === probe && (t.meta.prep === prep || VIEWS.indexOf(t.meta.prep) < 0);
@@ -441,7 +451,7 @@ def make_interactive(itable, out_html, extra_html=""):
     });
   }
   document.getElementById('selProbe').addEventListener('change', apply);
-  document.getElementById('selPrep').addEventListener('change', apply);
+  var chk = document.getElementById('chkAffine'); if (chk) chk.addEventListener('change', apply);
   if (window.Plotly && gd.data) apply(); else window.addEventListener('load', apply);
 })();
 </script>"""
@@ -452,11 +462,12 @@ def make_interactive(itable, out_html, extra_html=""):
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
             "<title>BrainFMBench Leaderboard</title>"
             "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}th.on{background:#e3e9f0}.arr{color:#889;font-size:0.85em;margin-left:4px}th.on .arr{color:#1a5fb4}th[data-col]:hover{background:#eaeef3}tr.grp th{background:#e8edf2;text-align:left;font-size:13px;letter-spacing:.02em}th.ds{text-align:center}td.best{font-weight:600}"
-            ".ctl{position:sticky;top:0;z-index:5;background:#fff;padding:8px 0;border-bottom:1px solid #eee;display:flex;gap:18px;flex-wrap:wrap}.ctl select{font-size:14px;padding:3px 6px;margin-left:6px}</style>"
+            ".ctl{position:sticky;top:0;z-index:5;background:#fff;padding:8px 0;border-bottom:1px solid #eee;display:flex;gap:18px;flex-wrap:wrap}.ctl select{font-size:14px;padding:3px 6px;margin-left:6px}"
+            ".prepctl{margin:4px 0 18px;padding:10px 14px;border:1px solid #dde3ea;border-radius:6px;background:#f7f9fb;max-width:900px}.prepctl label{font-size:15px;cursor:pointer}.prepctl .sub{margin-top:4px}</style>"
             "</head><body>\n"
             "<p><a href=\"https://github.com/epics-lab/BrainFMBench\">epics-lab/BrainFMBench</a>"
             " &middot; auto generated from <code>models/*/results.json</code></p>\n"
-            + controls + "\n" + plot + "\n" + extra_html + "\n" + script + "\n</body></html>\n")
+            + controls + "\n" + plot + "\n" + prep_ctl + "\n" + extra_html + "\n" + script + "\n</body></html>\n")
     print(f"Wrote {out_html}")
 
 
