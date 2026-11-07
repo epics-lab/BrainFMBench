@@ -2,7 +2,7 @@
 
 BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#versioning).
 
-## v2.0.0, unreleased
+## v2.0.0, 2026-11-06
 
 - Probe: added a linear probe alongside the RandomForest, on the same splits (5 seeds, 5 fold CV, held out test). Ridge for age and BMI, L2 logistic regression for sex, with alpha or C chosen by inner fivefold CV on the training data only
 - Every model rescored on both probes; RandomForest numbers are unchanged
