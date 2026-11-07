@@ -7,7 +7,7 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - Probe: added a linear probe alongside the RandomForest, on the same splits (5 seeds, 5 fold CV, held out test). Ridge for age and BMI, L2 logistic regression for sex, with alpha or C chosen by inner fivefold CV on the training data only
 - Every model rescored on both probes; RandomForest numbers are unchanged
 - Leaderboard: every task now shows all of its metrics, balanced accuracy and AUC for sex, MAE and R² for age and BMI. These were already computed and saved; only the display changed
-- Site: probe and preprocessing selectors drive both the plot and the table; affine results now appear in the plots next to each model's original preprocessing
+- Site: probe and preprocessing selectors drive both the plot and the table. Each view shows one probe on one turboprep variant, rigid or affine; AnatCL (CAT12), FreeSurfer and Brain2Vec (raw) appear in every view
 
 ## v1.1.0, 2026-11-06
 
