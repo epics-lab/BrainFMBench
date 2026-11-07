@@ -69,7 +69,11 @@ def main():
         if not os.path.isfile(labels):
             failures.append(f"{ds}: no labels file at labels/{ds}.csv")
             continue
+        with open(labels) as f:
+            label_cols = f.readline().strip().split(",")
         for task in tasks:
+            if task not in label_cols:   # e.g. p_factor_nonzero exists for PNC only
+                continue
             for probe in probes:
                 try:
                     row = score(feats, labels, ds, task, model_name=name, probe=probe)

@@ -16,11 +16,13 @@ code: https://github.com/emilykaczmarek/3D-Neuro-SimCLR
 weights: https://github.com/emilykaczmarek/3D-Neuro-SimCLR/releases/tag/v1.0.0
 cluster_only: true
 cpus: 2
-walltime: "6:00:00"
+walltime: "12:00:00"
 datasets:
   - NKI
   - HBN
+  - PNC
 tasks:
   - sex
   - age
   - bmi
+  - p_factor_nonzero

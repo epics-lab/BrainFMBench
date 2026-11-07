@@ -82,7 +82,10 @@ jobs:
                   # features arrive later from cluster-extract, which scores them itself
                   if not any(os.path.isfile(f"models/{m}/features/{ds}{ext}") for ext in (".csv", ".parquet")):
                       continue
+                  cols = open(f"labels/{ds}.csv").readline().strip().split(",")
                   for task in meta.get("tasks", []):
+                      if task not in cols:   # e.g. p_factor_nonzero exists for PNC only
+                          continue
                       for probe in ("rf", "linear"):
                           include.append({"model": m, "dataset": ds, "task": task, "probe": probe})
           print("matrix=" + json.dumps({"include": include}))

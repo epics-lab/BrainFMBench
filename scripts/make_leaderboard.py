@@ -19,7 +19,7 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DATASETS = ["HBN", "NKI"]
+DATASETS = ["HBN", "NKI", "PNC"]
 SEEDS = [0, 1, 2, 3, 42]
 
 # model display order + exact paper colors
@@ -55,6 +55,7 @@ BOX_ROWS = [
     ("Sex Classification", "sex", True,  "Balanced Accuracy", "cv_acc_values", "test_acc_seeds"),
     ("Age Prediction",     "age", False, "MAE (years)",       "cv_mae_values", "test_mae_seeds"),
     ("BMI Prediction",     "bmi", False, "MAE",               "cv_mae_values", "test_mae_seeds"),
+    ("p factor ≠ 0 (PNC)", "p_factor_nonzero", True, "Balanced Accuracy", "cv_acc_values", "test_acc_seeds"),
 ]
 
 SEP_COLOR = "black"; SEP_LW = 1.5
@@ -335,6 +336,8 @@ def make_interactive(itable, out_html, extra_html=""):
     in_legend = set()
     default_cats = {}
     for r, (row_label, task, is_cls, metric_ylabel, box_key, dot_key) in enumerate(BOX_ROWS, 1):
+        have = [c for c, ds in enumerate(DATASETS, 1)
+                if any(k[3] == ds and task in v for k, v in itable.items())] or [1]
         for c, ds in enumerate(DATASETS, 1):
             for probe in probes:
                 for m in order:
@@ -376,9 +379,9 @@ def make_interactive(itable, out_html, extra_html=""):
             bv = dummy_baseline(ds, task, is_cls)
             if bv is not None and np.isfinite(bv):
                 fig.add_hline(y=bv, line=dict(color="#AAAAAA", dash="dot", width=2), row=r, col=c)
-            if c == 1:
+            if c == have[0]:
                 fig.update_yaxes(title_text=f"<b>{row_label}</b><br>{metric_ylabel}", row=r, col=c)
-            elif is_cls:
+            elif is_cls and c > have[0]:
                 first = (r - 1) * ncol + 1
                 fig.update_yaxes(matches="y" if first == 1 else f"y{first}", row=r, col=c)
 
@@ -478,6 +481,7 @@ TASK_TABLES = [
     ("sex", "Sex", CLS_METRICS),
     ("age", "Age", REG_METRICS),
     ("bmi", "BMI", REG_METRICS),
+    ("p_factor_nonzero", "p factor ≠ 0", CLS_METRICS),
 ]
 
 
