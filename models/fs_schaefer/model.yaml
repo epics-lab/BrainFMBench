@@ -11,7 +11,9 @@ paper: https://papers.miccai.org/miccai-2026-sat/paper/MedAGI_025.pdf
 datasets:
   - NKI
   - HBN
+  - PNC
 tasks:
   - sex
   - age
   - bmi
+  - p_factor_nonzero

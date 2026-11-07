@@ -143,7 +143,8 @@ def run_regression(X_dict, y, test_size=0.1, task_name="Regression", probe="rf")
     return results
 
 
-TASK_TYPE = {"sex": "classification", "age": "regression", "bmi": "regression"}
+TASK_TYPE = {"sex": "classification", "age": "regression", "bmi": "regression",
+             "p_factor_nonzero": "classification"}
 
 
 def _read_table(path):
@@ -215,7 +216,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--features", required=True)
     p.add_argument("--labels", required=True)
-    p.add_argument("--dataset", required=True, choices=["NKI", "HBN"])
+    p.add_argument("--dataset", required=True, choices=["NKI", "HBN", "PNC"])
     p.add_argument("--task", required=True, choices=list(TASK_TYPE.keys()))
     p.add_argument("--model-name", default=None)
     p.add_argument("--probe", default="rf", choices=list(PROBES))

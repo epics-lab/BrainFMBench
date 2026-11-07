@@ -1,7 +1,7 @@
 # Contributing a model to BrainFMBench
 
 BrainFMBench evaluates **frozen features** from brain MRI models on
-neuroimaging datasets (NKI, HBN) across sex classification and age / BMI
+neuroimaging datasets (NKI, HBN, PNC) across sex classification and age / BMI
 regression. You submit your model; we run feature extraction on our cluster
 against preprocessed data (turboprep), then score the returned features.
 
@@ -81,8 +81,8 @@ architecture: short description
 paper: https://...              # paper or preprint (DOI, arXiv, bioRxiv)
 model_card: https://...         # e.g. Hugging Face model page
 code: https://...               # public code repository
-datasets: [NKI, HBN]
-tasks: [sex, age, bmi]
+datasets: [NKI, HBN, PNC]
+tasks: [sex, age, bmi, p_factor_nonzero]
 ```
 
 `paper`, `model_card` and `code` are shown as links on the leaderboard, so please

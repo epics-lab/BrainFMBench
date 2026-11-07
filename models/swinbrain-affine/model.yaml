@@ -16,11 +16,13 @@ weights: https://github.com/MAI-Lab-West-China-Hospital/SwinBrain#download-pretr
 weights_prestaged: true
 cluster_only: true
 cpus: 2
-walltime: "6:00:00"
+walltime: "12:00:00"
 datasets:
   - NKI
   - HBN
+  - PNC
 tasks:
   - sex
   - age
   - bmi
+  - p_factor_nonzero

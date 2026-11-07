@@ -69,14 +69,17 @@ features (5-fold CV across 5 seeds for the box, held-out test for the points).
 
 ## Tasks & data
 
-Models are evaluated on two datasets from the [Reproducible Brain Charts](https://reprobrainchart.github.io) (RBC)
+Models are evaluated on three datasets from the [Reproducible Brain Charts](https://reprobrainchart.github.io) (RBC)
 initiative:
 
 - **NKI** — Nathan Kline Institute Rockland Sample (958 subjects)
 - **HBN** — Healthy Brain Network (997 subjects)
+- **PNC** — Philadelphia Neurodevelopmental Cohort (1439 subjects)
 
-Models are evaluated across three tasks: **sex** classification (balanced accuracy and AUC) and **age** / **BMI**
-regression (mean absolute error and R²). Preprocessing is [turboprep](https://github.com/LemuelPuglisi/turboprep) by default, with
+Labels are derived from RBC and distributed under CC BY-NC-SA 4.0; see [labels/README.md](labels/README.md).
+
+Tasks: **sex** classification (balanced accuracy and AUC), **age** / **BMI** regression (mean absolute
+error and R²) and, on PNC, **p factor zero vs nonzero** classification (balanced accuracy and AUC). Preprocessing is [turboprep](https://github.com/LemuelPuglisi/turboprep) by default, with
 [CAT12](https://neuro-jena.github.io/cat/) also available.
 
 ## How it works

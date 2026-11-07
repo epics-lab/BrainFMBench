@@ -1,0 +1,29 @@
+# Labels
+
+`NKI.csv`, `HBN.csv` and `PNC.csv` are derived from the participant tables of
+[Reproducible Brain Charts (RBC)](https://reprobrainchart.github.io/), which shares these
+studies without a data use agreement under **CC BY-NC-SA 4.0**. These label files are
+therefore distributed under CC BY-NC-SA 4.0, not under the repository's MIT license
+(which covers the code).
+
+| File | Study | Columns |
+| --- | --- | --- |
+| `NKI.csv` | NKI Rockland Sample | sex, age, bmi |
+| `HBN.csv` | Healthy Brain Network | sex, age, bmi |
+| `PNC.csv` | Philadelphia Neurodevelopmental Cohort | sex, age, bmi, p_factor_nonzero |
+
+`sex` is 1 for female and 0 for male. `p_factor_nonzero` is 1 when RBC's harmonized p factor
+(`p_factor_mcelroy_harmonized_all_samples`) is above its floor value (no endorsed symptoms) and
+0 at the floor. PNC includes the 1439 subjects whose T1w passes RBC QC.
+
+If you use these labels, please cite RBC and the original studies:
+
+- Shafiei, G. et al. Reproducible Brain Charts: An open data resource for mapping brain
+  development and its associations with mental health. *Neuron* 113(22), 3758–3779 (2025).
+  https://doi.org/10.1016/j.neuron.2025.08.026
+- Nooner, K. B. et al. The NKI-Rockland Sample. *Front. Neurosci.* 6, 152 (2012).
+  https://doi.org/10.3389/fnins.2012.00152
+- Alexander, L. M. et al. An open resource for transdiagnostic research in pediatric mental
+  health and learning disorders. *Sci. Data* 4, 170181 (2017). https://doi.org/10.1038/sdata.2017.181
+- Satterthwaite, T. D. et al. Neuroimaging of the Philadelphia Neurodevelopmental Cohort.
+  *NeuroImage* 86, 544–553 (2014). https://doi.org/10.1016/j.neuroimage.2013.07.064

@@ -2,6 +2,13 @@
 
 BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#versioning).
 
+## v2.1.0, unreleased
+
+- Dataset: PNC from Reproducible Brain Charts, 1439 subjects passing RBC T1w QC, with raw, turboprep, turboprep-affine and CAT12 inputs
+- Task: p factor zero vs nonzero on PNC (RBC harmonized p factor at its floor vs above it), reported with balanced accuracy and AUC. A task runs on a dataset only when `labels/<DS>.csv` has its column
+- Labels: `labels/README.md` documents the RBC source, the CC BY-NC-SA 4.0 license of the label files, and the citations
+- No existing numbers changed
+
 ## v2.0.0, 2026-11-06
 
 - Probe: added a linear probe alongside the RandomForest, on the same splits (5 seeds, 5 fold CV, held out test). Ridge for age and BMI, L2 logistic regression for sex, with alpha or C chosen by inner fivefold CV on the training data only
