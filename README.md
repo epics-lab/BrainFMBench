@@ -14,10 +14,6 @@ fed into downstream learners; the leaderboard updates automatically.
 
 <!-- LEADERBOARD:START -->
 
-[![Leaderboard boxplots](leaderboard_boxplots.png?v=332e44a0)](https://www.epics-lab.ca/BrainFMBench/)
-
-**[Interactive version](https://www.epics-lab.ca/BrainFMBench/)**
-
 _Held out test, mean ± std over 5 seeds. There is no single overall score; sort by task on the [interactive site](https://www.epics-lab.ca/BrainFMBench/)._
 
 | Probe | Model | Preprocessing | HBN Sex bal acc ↑ | HBN Sex AUC ↑ | HBN Age MAE ↓ | HBN Age R² ↑ | HBN BMI MAE ↓ | HBN BMI R² ↑ | NKI Sex bal acc ↑ | NKI Sex AUC ↑ | NKI Age MAE ↓ | NKI Age R² ↑ | NKI BMI MAE ↓ | NKI BMI R² ↑ |
