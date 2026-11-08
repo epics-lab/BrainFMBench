@@ -177,7 +177,8 @@ jobs:
           git diff --staged --quiet && exit 0
           git commit -m "Update results + leaderboard [skip ci]"
           for i in 1 2 3; do
-            git pull --rebase origin main && git push && exit 0
+            git pull --rebase -X theirs origin main && git push && exit 0
+            git rebase --abort 2>/dev/null || true
             echo "push attempt $i failed, retrying"
             sleep 10
           done
