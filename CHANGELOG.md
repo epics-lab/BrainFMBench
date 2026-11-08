@@ -8,6 +8,7 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - Task: p factor zero vs nonzero on PNC (RBC harmonized p factor at its floor vs above it), reported with balanced accuracy and AUC. A task runs on a dataset only when `labels/<DS>.csv` has its column
 - Labels: `labels/README.md` documents the RBC source, the CC BY-NC-SA 4.0 license of the label files, and the citations
 - README: static figure restored (it broke with the third dataset), badges for datasets, preprocessing options, probes and version
+- Task: p factor regression on PNC (RBC harmonized p factor), reported with MAE and R², next to the zero vs nonzero task
 - No existing numbers changed
 
 ## v2.0.0, 2026-11-06

@@ -10,11 +10,11 @@ therefore distributed under CC BY-NC-SA 4.0, not under the repository's MIT lice
 | --- | --- | --- |
 | `NKI.csv` | NKI Rockland Sample | sex, age, bmi |
 | `HBN.csv` | Healthy Brain Network | sex, age, bmi |
-| `PNC.csv` | Philadelphia Neurodevelopmental Cohort | sex, age, bmi, p_factor_nonzero |
+| `PNC.csv` | Philadelphia Neurodevelopmental Cohort | sex, age, bmi, p_factor_nonzero, p_factor |
 
 `sex` is 1 for female and 0 for male. `p_factor_nonzero` is 1 when RBC's harmonized p factor
 (`p_factor_mcelroy_harmonized_all_samples`) is above its floor value (no endorsed symptoms) and
-0 at the floor. PNC includes the 1439 subjects whose T1w passes RBC QC.
+0 at the floor. `p_factor` is the harmonized p factor itself. PNC includes the 1439 subjects whose T1w passes RBC QC.
 
 If you use these labels, please cite RBC and the original studies:
 

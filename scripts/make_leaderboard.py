@@ -56,6 +56,7 @@ BOX_ROWS = [
     ("Age Prediction",     "age", False, "MAE (years)",       "cv_mae_values", "test_mae_seeds"),
     ("BMI Prediction",     "bmi", False, "MAE",               "cv_mae_values", "test_mae_seeds"),
     ("p factor ≠ 0 (PNC)", "p_factor_nonzero", True, "Balanced Accuracy", "cv_acc_values", "test_acc_seeds"),
+    ("p factor (PNC)",     "p_factor", False, "MAE",                 "cv_mae_values", "test_mae_seeds"),
 ]
 
 SEP_COLOR = "black"; SEP_LW = 1.5
@@ -493,6 +494,7 @@ TASK_TABLES = [
     ("age", "Age", REG_METRICS),
     ("bmi", "BMI", REG_METRICS),
     ("p_factor_nonzero", "p factor ≠ 0", CLS_METRICS),
+    ("p_factor", "p factor", REG_METRICS),
 ]
 
 

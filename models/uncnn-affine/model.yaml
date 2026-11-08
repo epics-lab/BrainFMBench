@@ -28,3 +28,4 @@ tasks:
   - age
   - bmi
   - p_factor_nonzero
+  - p_factor
