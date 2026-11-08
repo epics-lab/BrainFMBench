@@ -409,7 +409,21 @@ def make_interactive(itable, out_html, extra_html=""):
 
     try:
         static = go.Figure(fig)
-        static.update_layout(title_text=f"BrainFMBench leaderboard ({dict(PROBES)[default_probe]}, {dict(VIEW_PREPS)[default_view]})", width=1300)
+        s_probe = "linear" if "linear" in probes else default_probe
+        s_view = "turboprep"
+        cats, seen = {}, set()
+        for t in static.data:
+            on = bool(t.meta) and t.meta["probe"] == s_probe and _in_view(t.meta["prep"], s_view)
+            t.visible = on
+            t.showlegend = bool(on and t.q1 is not None and t.name not in seen)
+            if t.showlegend:
+                seen.add(t.name)
+            ax = (t.xaxis or "x").replace("x", "xaxis")
+            cats.setdefault(ax, [])
+            if on and t.q1 is not None and t.x[0] not in cats[ax]:
+                cats[ax].append(t.x[0])
+        static.update_layout({f"{ax}.categoryarray": v for ax, v in cats.items()})
+        static.update_layout(title_text=f"BrainFMBench leaderboard ({dict(PROBES)[s_probe]}, {dict(VIEW_PREPS)[s_view]})", width=1300)
         static.write_image(os.path.join(REPO, "leaderboard_boxplots.png"), scale=2)
         print("wrote plotly png")
     except Exception as e:
@@ -686,8 +700,8 @@ def main():
     for r in rows:
         prep = r.get("preprocessing", "turboprep")
         itable.setdefault((r.get("probe", "rf"), r["model"], prep, r["dataset"]), {})[r["task"]] = r
-        # the static matplotlib figure keeps the RandomForest probe on each model's original preprocessing
-        if r.get("probe", "rf") == "rf" and prep != "turboprep-affine":
+        # the static figure shows the linear probe on each model's original (rigid) preprocessing
+        if r.get("probe", "rf") == "linear" and prep != "turboprep-affine":
             table.setdefault((r["model"], r["dataset"]), {})[r["task"]] = r
 
     display = []
@@ -723,7 +737,7 @@ def main():
 
     lines = [
         "# BrainFMBench Leaderboard", "",
-        "Downstream probing of frozen features with a linear and a RandomForest probe, held out test. The static figure shows the RandomForest probe; the interactive site switches probe and preprocessing.",
+        "Downstream probing of frozen features with a linear and a RandomForest probe, held out test. The static figure shows the linear probe on rigid turboprep; the interactive site switches probe and preprocessing.",
         "Classification reports balanced accuracy and AUC; regression reports MAE and R². Arrows mark the better direction.", "",
     ]
     if fig_ok:
