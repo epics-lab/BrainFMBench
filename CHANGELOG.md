@@ -2,7 +2,7 @@
 
 BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#versioning).
 
-## v2.1.0, unreleased
+## v2.1.0, 2026-11-08
 
 - Dataset: PNC from Reproducible Brain Charts, 1439 subjects passing RBC T1w QC, with raw, turboprep, turboprep-affine and CAT12 inputs
 - Task: p factor zero vs nonzero on PNC (RBC harmonized p factor at its floor vs above it), reported with balanced accuracy and AUC. A task runs on a dataset only when `labels/<DS>.csv` has its column
