@@ -320,7 +320,7 @@ def _in_view(prep, view):
 
 
 def _ilabel(m):
-    return DISPLAY_NAMES.get(m, m).replace("\n", "<br>")
+    return DISPLAY_NAMES.get(m, m).replace("\n", " ")
 
 
 def make_interactive(itable, out_html, extra_html=""):
