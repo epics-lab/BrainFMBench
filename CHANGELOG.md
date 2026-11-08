@@ -9,7 +9,7 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - Labels: `labels/README.md` documents the RBC source, the CC BY-NC-SA 4.0 license of the label files, and the citations
 - README: static figure restored (it broke with the third dataset), badges for datasets, preprocessing options, probes and version
 - Task: p factor regression on PNC (RBC harmonized p factor), reported with MAE and R², next to the zero vs nonzero task
-- No existing numbers changed
+- Existing numbers unchanged except two linear probe sex AUC values that moved by 0.001 on the rescore (3D-Neuro-SimCLR affine on NKI, BrainIAC affine on HBN)
 
 ## v2.0.0, 2026-11-06
 
