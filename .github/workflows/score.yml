@@ -83,11 +83,12 @@ jobs:
                   if not any(os.path.isfile(f"models/{m}/features/{ds}{ext}") for ext in (".csv", ".parquet")):
                       continue
                   cols = open(f"labels/{ds}.csv").readline().strip().split(",")
-                  for task in meta.get("tasks", []):
-                      if task not in cols:   # e.g. p_factor_nonzero exists for PNC only
-                          continue
-                      for probe in ("rf", "linear"):
-                          include.append({"model": m, "dataset": ds, "task": task, "probe": probe})
+                  # e.g. the p factor tasks exist for PNC only
+                  tasks = [t for t in meta.get("tasks", []) if t in cols]
+                  if not tasks:
+                      continue
+                  for probe in ("rf", "linear"):
+                      include.append({"model": m, "dataset": ds, "probe": probe, "tasks": " ".join(tasks)})
           print("matrix=" + json.dumps({"include": include}))
           print("any=" + ("true" if include else "false"))
           PY
@@ -101,7 +102,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
-    name: score ${{ matrix.model }} ${{ matrix.dataset }} ${{ matrix.task }} ${{ matrix.probe }}
+    name: score ${{ matrix.model }} ${{ matrix.dataset }} ${{ matrix.probe }}
     steps:
       - uses: actions/checkout@v4
 
@@ -111,12 +112,15 @@ jobs:
 
       - run: pip install -r eval/requirements-scoring.txt
 
-      - run: python scripts/score_all.py models/${{ matrix.model }} ${{ matrix.dataset }} ${{ matrix.task }} ${{ matrix.probe }}
+      - run: |
+          for task in ${{ matrix.tasks }}; do
+            python scripts/score_all.py models/${{ matrix.model }} ${{ matrix.dataset }} $task ${{ matrix.probe }}
+          done
 
       - uses: actions/upload-artifact@v4
         with:
-          name: part__${{ matrix.model }}__${{ matrix.dataset }}__${{ matrix.task }}__${{ matrix.probe }}
-          path: models/${{ matrix.model }}/results.${{ matrix.dataset }}.${{ matrix.task }}.${{ matrix.probe }}.json
+          name: part__${{ matrix.model }}__${{ matrix.dataset }}__${{ matrix.probe }}
+          path: models/${{ matrix.model }}/results.${{ matrix.dataset }}.*.${{ matrix.probe }}.json
           retention-days: 1
           if-no-files-found: error
 

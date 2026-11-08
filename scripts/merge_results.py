@@ -3,7 +3,7 @@
 Merge the per (dataset, task) results written by parallel CI scoring jobs
 into models/<name>/results.json, in the same row order score_all.py uses.
 
-Each part lives at <parts_dir>/part__<model>__<dataset>__<task>__<probe>/results.<dataset>.<task>.<probe>.json
+Each part lives at <parts_dir>/part__<model>__<dataset>__<probe>/results.<dataset>.<task>.<probe>.json
 
 Usage:
   python scripts/merge_results.py parts
@@ -25,8 +25,10 @@ def main():
         return 2
 
     parts = {}
-    for p in glob.glob(os.path.join(sys.argv[1], "part__*", "*.json")):
-        _, model, ds, task, probe = os.path.basename(os.path.dirname(p)).split("__")
+    # each part holds results.<dataset>.<task>.<probe>.json files for one model
+    for p in glob.glob(os.path.join(sys.argv[1], "part__*", "results.*.json")):
+        model = os.path.basename(os.path.dirname(p)).split("__")[1]
+        _, ds, task, probe, _ = os.path.basename(p).split(".")
         parts[(model, ds, task, probe)] = json.load(open(p))
 
     for model in sorted({m for m, _, _, _ in parts}):
