@@ -144,7 +144,8 @@ def run_regression(X_dict, y, test_size=0.1, task_name="Regression", probe="rf")
 
 
 TASK_TYPE = {"sex": "classification", "age": "regression", "bmi": "regression",
-             "p_factor_nonzero": "classification"}
+             "p_factor_nonzero": "classification",
+             "p_factor": "regression"}
 
 
 def _read_table(path):

@@ -85,7 +85,8 @@ initiative:
 Labels are derived from RBC and distributed under CC BY-NC-SA 4.0; see [labels/README.md](labels/README.md).
 
 Tasks: **sex** classification (balanced accuracy and AUC), **age** / **BMI** regression (mean absolute
-error and R²) and, on PNC, **p factor zero vs nonzero** classification (balanced accuracy and AUC). Inputs are offered with four preprocessing options:
+error and R²) and, on PNC, the RBC harmonized **p factor**, both as zero vs nonzero classification (balanced accuracy
+and AUC) and as regression (MAE and R²). Inputs are offered with four preprocessing options:
 [turboprep](https://github.com/LemuelPuglisi/turboprep) with rigid registration (default), turboprep with
 affine registration to MNI 1 mm, [CAT12](https://neuro-jena.github.io/cat/) gray matter maps, and the raw T1w
 for models with their own pipeline.
