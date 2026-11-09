@@ -173,7 +173,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A models
-          git add LEADERBOARD.md leaderboard_boxplots.png README.md
+          git add LEADERBOARD.md leaderboard_boxplots.png leaderboard_overview.png README.md
           git diff --staged --quiet && exit 0
           git commit -m "Update results + leaderboard [skip ci]"
           for i in 1 2 3; do
