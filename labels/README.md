@@ -8,15 +8,20 @@ therefore distributed under CC BY-NC-SA 4.0, not under the repository's MIT lice
 
 | File | Study | Columns |
 | --- | --- | --- |
-| `NKI.csv` | NKI Rockland Sample | sex, age, bmi |
-| `HBN.csv` | Healthy Brain Network | sex, age, bmi |
-| `PNC.csv` | Philadelphia Neurodevelopmental Cohort | sex, age, bmi, p_factor_nonzero, p_factor |
-| `BHRC.csv` | Brazilian High Risk Cohort | sex, age, bmi, p_factor |
-| `CCNP.csv` | Chinese Color Nest Project | sex, age, bmi, p_factor |
+| `NKI.csv` | NKI Rockland Sample | sex, age, bmi, p_factor, internalizing, externalizing, handedness |
+| `HBN.csv` | Healthy Brain Network | sex, age, bmi, p_factor, internalizing, externalizing, handedness |
+| `PNC.csv` | Philadelphia Neurodevelopmental Cohort | sex, age, bmi, p_factor_nonzero, p_factor, internalizing, externalizing, handedness |
+| `BHRC.csv` | Brazilian High Risk Cohort | sex, age, bmi, p_factor, internalizing, externalizing |
+| `CCNP.csv` | Chinese Color Nest Project | sex, age, bmi, p_factor, internalizing, externalizing |
 
 `sex` is 1 for female and 0 for male. `p_factor_nonzero` is 1 when RBC's harmonized p factor
 (`p_factor_mcelroy_harmonized_all_samples`) is above its floor value (no endorsed symptoms) and
-0 at the floor. `p_factor` is the harmonized p factor itself. PNC includes the 1439 subjects whose T1w passes RBC QC, BHRC 542 and CCNP 178. BHRC is longitudinal: the first session that passes QC is used, and its labels come from that same session.
+0 at the floor. `p_factor` is the harmonized p factor itself, and `internalizing` and `externalizing`
+are the matching harmonized scores (`internalizing_mcelroy_harmonized_all_samples`,
+`externalizing_mcelroy_harmonized_all_samples`). In NKI these scores exist for 139 of 958 subjects,
+because the CBCL they are derived from covers children only. `handedness` is 1 for left and 0 for
+right; other values are left empty. It is included only where at least 50 subjects are left handed
+(PNC 201, HBN 112, NKI 88; BHRC has 35 and CCNP 7). PNC includes the 1439 subjects whose T1w passes RBC QC, BHRC 542 and CCNP 178. BHRC is longitudinal: the first session that passes QC is used, and its labels come from that same session. For HBN and NKI, the scores and handedness come from the session whose age matches the age label.
 
 If you use these labels, please cite RBC and the original studies:
 

@@ -31,3 +31,6 @@ tasks:
   - bmi
   - p_factor_nonzero
   - p_factor
+  - internalizing
+  - externalizing
+  - handedness

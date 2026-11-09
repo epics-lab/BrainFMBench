@@ -7,6 +7,9 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - Datasets: BHRC (Brazilian High Risk Cohort, 542 subjects) and CCNP (Chinese Color Nest Project, 178 subjects) from Reproducible Brain Charts, subjects passing RBC T1w QC, with raw, turboprep, turboprep-affine and CAT12 inputs. BHRC is longitudinal: the first session passing QC is used, with labels from that session
 - Tasks on the new datasets: sex, age, BMI and p factor regression
 - FreeSurfer aparc and Schaefer 400 features for BHRC and CCNP from the RBC FreeSurfer outputs
+- Tasks: internalizing and externalizing regression (RBC harmonized scores, MAE and R²) on all five datasets, and p factor regression on HBN and NKI, so it now runs on all five
+- Task: handedness, left vs right, as classification (balanced accuracy and AUC) on PNC, HBN and NKI, the datasets with at least 50 left handed subjects
+- Site and README: an overview heatmap of every model on every dataset and task, colored by improvement over chance relative to the best model in the row, with the best model and those within one seed SD of it boxed
 
 ## v2.1.0, 2026-11-08
 

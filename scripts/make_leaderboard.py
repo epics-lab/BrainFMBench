@@ -56,7 +56,10 @@ BOX_ROWS = [
     ("Age Prediction",     "age", False, "MAE (years)",       "cv_mae_values", "test_mae_seeds"),
     ("BMI Prediction",     "bmi", False, "MAE",               "cv_mae_values", "test_mae_seeds"),
     ("p factor ≠ 0 (PNC)", "p_factor_nonzero", True, "Balanced Accuracy", "cv_acc_values", "test_acc_seeds"),
-    ("p factor (PNC)",     "p_factor", False, "MAE",                 "cv_mae_values", "test_mae_seeds"),
+    ("p factor",           "p_factor", False, "MAE",                 "cv_mae_values", "test_mae_seeds"),
+    ("Internalizing",      "internalizing", False, "MAE",            "cv_mae_values", "test_mae_seeds"),
+    ("Externalizing",      "externalizing", False, "MAE",            "cv_mae_values", "test_mae_seeds"),
+    ("Handedness",         "handedness", True, "Balanced Accuracy",  "cv_acc_values", "test_acc_seeds"),
 ]
 
 SEP_COLOR = "black"; SEP_LW = 1.5
@@ -332,7 +335,9 @@ def _ilabel(m):
 
 
 OV_TASKS = [("sex", "Sex", "AUC"), ("age", "Age", "R²"), ("bmi", "BMI", "R²"),
-            ("p_factor_nonzero", "p factor ≠ 0", "AUC"), ("p_factor", "p factor", "R²")]
+            ("p_factor_nonzero", "p factor ≠ 0", "AUC"), ("p_factor", "p factor", "R²"),
+            ("internalizing", "Internalizing", "R²"), ("externalizing", "Externalizing", "R²"),
+            ("handedness", "Handedness", "AUC")]
 OV_CHANCE = {"AUC": 0.5, "R²": 0.0}
 OV_PREP = {"turboprep": "rigid", "turboprep-affine": "affine", "cat12": "CAT12", "freesurfer": "FreeSurfer", "raw": "raw"}
 
@@ -615,6 +620,9 @@ TASK_TABLES = [
     ("bmi", "BMI", REG_METRICS),
     ("p_factor_nonzero", "p factor ≠ 0", CLS_METRICS),
     ("p_factor", "p factor", REG_METRICS),
+    ("internalizing", "Internalizing", REG_METRICS),
+    ("externalizing", "Externalizing", REG_METRICS),
+    ("handedness", "Handedness", CLS_METRICS),
 ]
 
 
