@@ -19,7 +19,7 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-DATASETS = ["HBN", "NKI", "PNC"]
+DATASETS = ["HBN", "NKI", "PNC", "BHRC", "CCNP"]
 SEEDS = [0, 1, 2, 3, 42]
 
 # model display order + exact paper colors

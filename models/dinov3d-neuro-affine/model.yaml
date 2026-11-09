@@ -18,6 +18,8 @@ datasets:
   - NKI
   - HBN
   - PNC
+  - BHRC
+  - CCNP
 tasks:
   - sex
   - age

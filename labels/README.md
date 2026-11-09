@@ -1,6 +1,6 @@
 # Labels
 
-`NKI.csv`, `HBN.csv` and `PNC.csv` are derived from the participant tables of
+`NKI.csv`, `HBN.csv`, `PNC.csv`, `BHRC.csv` and `CCNP.csv` are derived from the participant tables of
 [Reproducible Brain Charts (RBC)](https://reprobrainchart.github.io/), which shares these
 studies without a data use agreement under **CC BY-NC-SA 4.0**. These label files are
 therefore distributed under CC BY-NC-SA 4.0, not under the repository's MIT license
@@ -11,10 +11,12 @@ therefore distributed under CC BY-NC-SA 4.0, not under the repository's MIT lice
 | `NKI.csv` | NKI Rockland Sample | sex, age, bmi |
 | `HBN.csv` | Healthy Brain Network | sex, age, bmi |
 | `PNC.csv` | Philadelphia Neurodevelopmental Cohort | sex, age, bmi, p_factor_nonzero, p_factor |
+| `BHRC.csv` | Brazilian High Risk Cohort | sex, age, bmi, p_factor |
+| `CCNP.csv` | Chinese Color Nest Project | sex, age, bmi, p_factor |
 
 `sex` is 1 for female and 0 for male. `p_factor_nonzero` is 1 when RBC's harmonized p factor
 (`p_factor_mcelroy_harmonized_all_samples`) is above its floor value (no endorsed symptoms) and
-0 at the floor. `p_factor` is the harmonized p factor itself. PNC includes the 1439 subjects whose T1w passes RBC QC.
+0 at the floor. `p_factor` is the harmonized p factor itself. PNC includes the 1439 subjects whose T1w passes RBC QC, BHRC 542 and CCNP 178. BHRC is longitudinal: the first session that passes QC is used, and its labels come from that same session.
 
 If you use these labels, please cite RBC and the original studies:
 
@@ -22,6 +24,8 @@ If you use these labels, please cite RBC and the original studies:
   development and its associations with mental health. *Neuron* 113(22), 3758–3779 (2025).
   https://doi.org/10.1016/j.neuron.2025.08.026
 - Nooner, K. B. et al. The NKI-Rockland Sample. *Front. Neurosci.* 6, 152 (2012).
+- Salum, G. A. et al. High risk cohort study for psychiatric disorders in childhood: rationale, design, methods and preliminary results. *Int. J. Methods Psychiatr. Res.* 24, 58–73 (2015).
+- Liu, S. et al. Chinese Color Nest Project: an accelerated longitudinal brain-mind cohort. *Dev. Cogn. Neurosci.* 52, 101020 (2021).
   https://doi.org/10.3389/fnins.2012.00152
 - Alexander, L. M. et al. An open resource for transdiagnostic research in pediatric mental
   health and learning disorders. *Sci. Data* 4, 170181 (2017). https://doi.org/10.1038/sdata.2017.181
