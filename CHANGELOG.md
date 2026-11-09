@@ -9,7 +9,7 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - FreeSurfer aparc and Schaefer 400 features for BHRC and CCNP from the RBC FreeSurfer outputs
 - Tasks: internalizing and externalizing regression (RBC harmonized scores, MAE and R²) on all five datasets, and p factor regression on HBN and NKI, so it now runs on all five
 - Task: handedness, left vs right, as classification (balanced accuracy and AUC) on PNC, HBN and NKI, the datasets with at least 50 left handed subjects
-- Site and README: an overview heatmap of every model on every dataset and task, colored by improvement over chance relative to the best model in the row, with the best model and those within one seed SD of it boxed
+- Site and README: an overview heatmap of every model on every dataset and task, colored by improvement over chance relative to the best model in the row, with the best model and those within one seed SD of it boxed. It shows balanced accuracy and MAE by default; the site can switch it to AUC and R²
 
 ## v2.1.0, 2026-11-08
 

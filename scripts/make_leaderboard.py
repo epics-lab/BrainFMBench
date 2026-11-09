@@ -334,26 +334,43 @@ def _ilabel(m):
     return DISPLAY_NAMES.get(m, m).replace("\n", " ")
 
 
-OV_TASKS = [("sex", "Sex", "AUC"), ("age", "Age", "R²"), ("bmi", "BMI", "R²"),
-            ("p_factor_nonzero", "p factor ≠ 0", "AUC"), ("p_factor", "p factor", "R²"),
-            ("internalizing", "Internalizing", "R²"), ("externalizing", "Externalizing", "R²"),
-            ("handedness", "Handedness", "AUC")]
-OV_CHANCE = {"AUC": 0.5, "R²": 0.0}
+OV_TASKS = [("sex", "Sex", True), ("age", "Age", False), ("bmi", "BMI", False),
+            ("p_factor_nonzero", "p factor ≠ 0", True), ("p_factor", "p factor", False),
+            ("internalizing", "Internalizing", False), ("externalizing", "Externalizing", False),
+            ("handedness", "Handedness", True)]
+# metric set -> (classification, regression): (result key, label)
+OV_METRICS = {"main": (("test_acc", "bal acc"), ("test_mae", "MAE")),
+              "alt": (("test_auc", "AUC"), ("test_r2", "R²"))}
+OV_METRIC_NAMES = [("main", "balanced accuracy and MAE"), ("alt", "AUC and R²")]
 OV_PREP = {"turboprep": "rigid", "turboprep-affine": "affine", "cat12": "CAT12", "freesurfer": "FreeSurfer", "raw": "raw"}
 
 
-def make_overview(itable, probe, view):
-    """Task by model heatmap for one probe and one turboprep view. Color is improvement over chance
-    relative to the best model in the row; boxes mark the best model and any within one seed SD of it."""
+_DUMMY = {}
+
+
+def _ov_chance(ds, t, key):
+    """Chance level: 0.5 for balanced accuracy and AUC, 0 for R², a mean predictor's MAE for MAE."""
+    if key == "test_mae":
+        if (ds, t) not in _DUMMY:
+            _DUMMY[(ds, t)] = dummy_baseline(ds, t, False)
+        return _DUMMY[(ds, t)]
+    return 0.0 if key == "test_r2" else 0.5
+
+
+def make_overview(itable, probe, view, metric="main"):
+    """Task by model heatmap for one probe, one turboprep view and one metric set. Color is improvement
+    over chance relative to the best model in the row; boxes mark the best model and any within one
+    seed SD of it."""
     import plotly.graph_objects as go
+    cls_m, reg_m = OV_METRICS[metric]
     val, sd, cols = {}, {}, []
     for (p, m, pp, ds), tasks in itable.items():
         if p != probe or not _in_view(pp, view):
             continue
         col = f"{_ilabel(m)}<br><span style='font-size:10px;color:#777'>{OV_PREP.get(pp, pp)}</span>"
-        for t, _n, metric in OV_TASKS:
+        for t, _n, is_cls in OV_TASKS:
             r = tasks.get(t)
-            k = "test_auc" if metric == "AUC" else "test_r2"
+            k = (cls_m if is_cls else reg_m)[0]
             if not r or r.get(k + "_mean") is None:
                 continue
             if col not in cols:
@@ -364,19 +381,22 @@ def make_overview(itable, probe, view):
         return None
     rkey, ypos, ylab, heads, y = [], [], [], [], 0.0
     for ds in DATASETS:
-        trows = [(t, n, mt) for t, n, mt in OV_TASKS if any((c, ds, t) in val for c in cols)]
+        trows = [(t, n, (cls_m if c_ else reg_m)) for t, n, c_ in OV_TASKS if any((c, ds, t) in val for c in cols)]
+        trows = [(t, n, mt) for t, n, mt in trows if _ov_chance(ds, t, mt[0]) is not None]
         if not trows:
             continue
         heads.append((y, ds)); y += 1
         for t, n, mt in trows:
-            rkey.append((ds, t, mt)); ypos.append(y); ylab.append(f"{n}  <span style='color:#999'>{mt}</span>"); y += 1
+            rkey.append((ds, t, mt[0])); ypos.append(y); ylab.append(f"{n}  <span style='color:#999'>{mt[1]}</span>"); y += 1
         y += 0.35
     nan = float("nan")
     M = np.array([[val.get((c, ds, t), nan) for c in cols] for ds, t, _ in rkey])
     SD = np.array([[sd.get((c, ds, t), nan) for c in cols] for ds, t, _ in rkey])
     S = np.zeros_like(M)
-    for i, (_ds, _t, mt) in enumerate(rkey):
-        g = M[i] - OV_CHANCE[mt]
+    for i, (ds_, t_, mk) in enumerate(rkey):
+        ch = _ov_chance(ds_, t_, mk)
+        # MAE: lower is better, gain is the fraction of the mean predictor's error removed
+        g = (ch - M[i]) / ch if mk == "test_mae" else M[i] - ch
         best = np.nanmax(g)
         S[i] = np.clip(g / best, 0, None) if best > 0 else 0
         if best < 0.1:
@@ -396,8 +416,11 @@ def make_overview(itable, probe, view):
             hovertemplate="%{x}<br>" + rkey[i][0] + " " + ylab[i] + ": %{customdata} over 5 seeds<extra></extra>"))
         if np.all(np.isnan(M[i])):
             continue
-        b = int(np.nanargmax(M[i])); thr = M[i][b] - (0 if np.isnan(SD[i][b]) else SD[i][b])
-        for j in np.where(M[i] >= thr - 1e-12)[0]:
+        low = rkey[i][2] == "test_mae"
+        b = int(np.nanargmin(M[i]) if low else np.nanargmax(M[i]))
+        s_ = 0 if np.isnan(SD[i][b]) else SD[i][b]
+        near = M[i] <= M[i][b] + s_ + 1e-12 if low else M[i] >= M[i][b] - s_ - 1e-12
+        for j in np.where(near)[0]:
             if S[i][j] > 0:
                 fig.add_shape(type="rect", x0=j - 0.47, x1=j + 0.47, y0=yy - 0.45, y1=yy + 0.45,
                               line=dict(color="#1f4e3d", width=2))
@@ -523,9 +546,10 @@ def make_interactive(itable, out_html, extra_html=""):
     ov = {}
     for p_ in probes:
         for v_ in views:
-            f_ = make_overview(itable, p_, v_)
-            if f_ is not None:
-                ov[f"{p_}|{v_}"] = _json.loads(f_.to_json())
+            for m_, _ in OV_METRIC_NAMES:
+                f_ = make_overview(itable, p_, v_, m_)
+                if f_ is not None:
+                    ov[f"{p_}|{v_}|{m_}"] = _json.loads(f_.to_json())
     try:
         sf = make_overview(itable, "linear" if "linear" in probes else default_probe, "turboprep")
         if sf is not None:
@@ -534,9 +558,12 @@ def make_interactive(itable, out_html, extra_html=""):
             print("wrote overview png")
     except Exception as e:
         print(f"overview png export failed: {e}")
-    ovhtml = ('<h2 style="margin:18px 0 2px">Overview</h2><div class="sub">Held out test. Color: improvement over chance, '
-              'relative to the best model in each row; pale rows are near chance. Boxed: best model and any model within '
-              'one seed SD of it. Hover for mean ± SD over 5 seeds.</div><div id="ovplot"></div>')
+    ovhtml = ('<h2 style="margin:18px 0 2px">Overview</h2><div class="ctl"><label>Metric <select id="selMetric">'
+              + "".join(f'<option value="{m_}"{" selected" if m_ == "main" else ""}>{t_}</option>' for m_, t_ in OV_METRIC_NAMES)
+              + '</select></label></div><div class="sub">Held out test. Color: improvement over chance, relative to the best '
+              'model in each row; pale rows are near chance. Chance is 0.5 for balanced accuracy and AUC, 0 for R², and for '
+              'MAE the error of predicting the training mean, so MAE color is the fraction of that error removed. Boxed: best '
+              'model and any model within one seed SD of it. Hover for mean ± SD over 5 seeds.</div><div id="ovplot"></div>')
     plot = fig.to_html(full_html=False, include_plotlyjs="cdn", div_id="lbplot",
                        config={"responsive": True, "displaylogo": False})
     import html as _h
@@ -574,7 +601,8 @@ def make_interactive(itable, out_html, extra_html=""):
       if (show) seen[t.name] = true;
       legend.push(show);
     });
-    var k = probe + '|' + prep;
+    var ms = document.getElementById('selMetric');
+    var k = probe + '|' + prep + '|' + (ms ? ms.value : 'main');
     if (OV[k]) Plotly.react('ovplot', OV[k].data, OV[k].layout, {displayModeBar: false, responsive: true});
     Plotly.restyle(gd, {visible: vis, showlegend: legend});
     var lay = {};
@@ -591,6 +619,7 @@ def make_interactive(itable, out_html, extra_html=""):
     });
   }
   document.getElementById('selProbe').addEventListener('change', apply);
+  var ms = document.getElementById('selMetric'); if (ms) ms.addEventListener('change', apply);
   var chk = document.getElementById('chkAffine'); if (chk) chk.addEventListener('change', apply);
   if (window.Plotly && gd.data) apply(); else window.addEventListener('load', apply);
 })();
