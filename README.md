@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-MIT_code_%C2%B7_CC_BY--NC--SA_labels-0a7bbb?style=for-the-badge)](labels/README.md)
 [![Scoring](https://img.shields.io/github/actions/workflow/status/epics-lab/BrainFMBench/score.yml?style=for-the-badge&label=Scoring&logo=githubactions&logoColor=white)](https://github.com/epics-lab/BrainFMBench/actions/workflows/score.yml)
 [![Models](https://img.shields.io/badge/%F0%9F%A7%A0_Models-10-e67e22?style=for-the-badge)](LEADERBOARD.md)
-[![Datasets](https://img.shields.io/badge/Datasets-3-16a085?style=for-the-badge)](#tasks--data)
+[![Datasets](https://img.shields.io/badge/Datasets-5-16a085?style=for-the-badge)](#tasks--data)
 [![Preprocessing](https://img.shields.io/badge/Preprocessing_options-4-8e44ad?style=for-the-badge)](CONTRIBUTING.md)
 [![Probes](https://img.shields.io/badge/Probes-RandomForest_%C2%B7_Linear-34495e?style=for-the-badge)](#scoring-protocol)
 [![Version](https://img.shields.io/github/v/tag/epics-lab/BrainFMBench?style=for-the-badge&label=Version)](CHANGELOG.md)
@@ -18,7 +18,7 @@ fed into downstream learners; the leaderboard updates automatically.
 
 <!-- LEADERBOARD:START -->
 
-[![Leaderboard boxplots](leaderboard_boxplots.png?v=5e09c7a5)](https://www.epics-lab.ca/BrainFMBench/)
+[![BrainFMBench overview](leaderboard_overview.png?v=595d1f01)](https://www.epics-lab.ca/BrainFMBench/)
 
 **[Interactive version](https://www.epics-lab.ca/BrainFMBench/)**
 
