@@ -18,7 +18,7 @@ fed into downstream learners; the leaderboard updates automatically.
 
 <!-- LEADERBOARD:START -->
 
-[![BrainFMBench overview](leaderboard_overview.png?v=595d1f01)](https://www.epics-lab.ca/BrainFMBench/)
+[![BrainFMBench overview](leaderboard_overview.png?v=1b732cde)](https://www.epics-lab.ca/BrainFMBench/)
 
 **[Interactive version](https://www.epics-lab.ca/BrainFMBench/)**
 
