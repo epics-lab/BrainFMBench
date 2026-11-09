@@ -75,7 +75,9 @@ jobs:
               models = sorted(os.path.basename(d.rstrip("/")) for d in glob.glob("models/*/"))
           else:
               models = [s for s in os.environ["SLUGS"].split() if os.path.isfile(f"models/{s}/model.yaml")]
-          include = []
+          # one unit per (model, dataset, task, probe); units are packed into at most 256 jobs
+          # (the GitHub matrix limit), so no single job runs every task of a heavy model
+          units = []
           for m in models:
               meta = yaml.safe_load(open(f"models/{m}/model.yaml"))
               for ds in meta.get("datasets", []):
@@ -88,7 +90,16 @@ jobs:
                   if not tasks:
                       continue
                   for probe in ("rf", "linear"):
-                      include.append({"model": m, "dataset": ds, "probe": probe, "tasks": " ".join(tasks)})
+                      units += [(m, ds, probe, t) for t in tasks]
+          size = max(1, -(-len(units) // 256))
+          include = []
+          for i in range(0, len(units), size):
+              ch = units[i:i + size]
+              m, ds, probe, _ = ch[0]
+              name = f"{m} {ds} {probe} " + " ".join(t for *_, t in ch) if all(u[:3] == ch[0][:3] for u in ch) \
+                  else " | ".join(f"{a} {b} {c} {d}" for a, b, c, d in ch)
+              include.append({"id": len(include), "name": name,
+                              "units": " ".join(":".join(u) for u in ch)})
           print("matrix=" + json.dumps({"include": include}))
           print("any=" + ("true" if include else "false"))
           PY
@@ -98,11 +109,11 @@ jobs:
     needs: plan
     if: needs.plan.outputs.any == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 350
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
-    name: score ${{ matrix.model }} ${{ matrix.dataset }} ${{ matrix.probe }}
+    name: score ${{ matrix.name }}
     steps:
       - uses: actions/checkout@v4
 
@@ -112,21 +123,31 @@ jobs:
 
       - run: pip install -r eval/requirements-scoring.txt
 
+      # each finished unit is copied to out/<model>/ right away, so a job that times out
+      # still uploads the units it completed
       - run: |
-          for task in ${{ matrix.tasks }}; do
-            python scripts/score_all.py models/${{ matrix.model }} ${{ matrix.dataset }} $task ${{ matrix.probe }}
+          mkdir -p out && echo "${{ matrix.units }}" > out/units.txt
+          rc=0
+          for u in ${{ matrix.units }}; do
+            IFS=: read -r m ds probe task <<< "$u"
+            python scripts/score_all.py "models/$m" "$ds" "$task" "$probe" || rc=1
+            mkdir -p "out/$m" && cp "models/$m/results.$ds.$task.$probe.json" "out/$m/" 2>/dev/null || rc=1
           done
+          exit $rc
 
-      - uses: actions/upload-artifact@v4
+      - if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: part__${{ matrix.model }}__${{ matrix.dataset }}__${{ matrix.probe }}
-          path: models/${{ matrix.model }}/results.${{ matrix.dataset }}.*.${{ matrix.probe }}.json
-          retention-days: 1
-          if-no-files-found: error
+          name: part__${{ matrix.id }}
+          path: out
+          retention-days: 3
+          if-no-files-found: warn
 
   leaderboard:
     needs: [plan, score]
-    if: ${{ !cancelled() && needs.plan.result == 'success' && (needs.score.result == 'success' || needs.score.result == 'skipped') }}
+    # runs even when some score jobs failed or timed out: finished units are merged,
+    # missing ones keep their previous results (see merge_results.py)
+    if: ${{ always() && needs.plan.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -140,13 +161,13 @@ jobs:
 
       - run: pip install -r eval/requirements-scoring.txt
 
-      - if: needs.score.result == 'success'
+      - if: needs.score.result != 'skipped'
         uses: actions/download-artifact@v4
         with:
           pattern: part__*
           path: parts
 
-      - if: needs.score.result == 'success'
+      - if: needs.score.result != 'skipped'
         run: python scripts/merge_results.py parts
 
       - run: python scripts/make_leaderboard.py
@@ -186,7 +207,7 @@ jobs:
 
   deploy-pages:
     needs: leaderboard
-    if: ${{ !cancelled() && needs.leaderboard.result == 'success' && github.ref == 'refs/heads/main' }}
+    if: ${{ always() && needs.leaderboard.result == 'success' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
