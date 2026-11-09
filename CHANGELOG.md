@@ -2,6 +2,12 @@
 
 BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#versioning).
 
+## v2.2.0, unreleased
+
+- Datasets: BHRC (Brazilian High Risk Cohort, 542 subjects) and CCNP (Chinese Color Nest Project, 178 subjects) from Reproducible Brain Charts, subjects passing RBC T1w QC, with raw, turboprep, turboprep-affine and CAT12 inputs. BHRC is longitudinal: the first session passing QC is used, with labels from that session
+- Tasks on the new datasets: sex, age, BMI and p factor regression
+- FreeSurfer aparc and Schaefer 400 features for BHRC and CCNP from the RBC FreeSurfer outputs
+
 ## v2.1.0, 2026-11-08
 
 - Dataset: PNC from Reproducible Brain Charts, 1439 subjects passing RBC T1w QC, with raw, turboprep, turboprep-affine and CAT12 inputs
