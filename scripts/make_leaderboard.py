@@ -133,6 +133,14 @@ def _png_v():
         return "0"
 
 
+def _file_v(name):
+    import hashlib
+    try:
+        return hashlib.sha1(open(os.path.join(REPO, name), "rb").read()).hexdigest()[:8]
+    except OSError:
+        return "0"
+
+
 def _order_and_colors(table):
     present = _all_models_in(table)
     known = [m for m in MODEL_ORDER if m in present]
@@ -323,6 +331,84 @@ def _ilabel(m):
     return DISPLAY_NAMES.get(m, m).replace("\n", " ")
 
 
+OV_TASKS = [("sex", "Sex", "AUC"), ("age", "Age", "R²"), ("bmi", "BMI", "R²"),
+            ("p_factor_nonzero", "p factor ≠ 0", "AUC"), ("p_factor", "p factor", "R²")]
+OV_CHANCE = {"AUC": 0.5, "R²": 0.0}
+OV_PREP = {"turboprep": "rigid", "turboprep-affine": "affine", "cat12": "CAT12", "freesurfer": "FreeSurfer", "raw": "raw"}
+
+
+def make_overview(itable, probe, view):
+    """Task by model heatmap for one probe and one turboprep view. Color is improvement over chance
+    relative to the best model in the row; boxes mark the best model and any within one seed SD of it."""
+    import plotly.graph_objects as go
+    val, sd, cols = {}, {}, []
+    for (p, m, pp, ds), tasks in itable.items():
+        if p != probe or not _in_view(pp, view):
+            continue
+        col = f"{_ilabel(m)}<br><span style='font-size:10px;color:#777'>{OV_PREP.get(pp, pp)}</span>"
+        for t, _n, metric in OV_TASKS:
+            r = tasks.get(t)
+            k = "test_auc" if metric == "AUC" else "test_r2"
+            if not r or r.get(k + "_mean") is None:
+                continue
+            if col not in cols:
+                cols.append(col)
+            val[(col, ds, t)] = float(r[k + "_mean"])
+            sd[(col, ds, t)] = float(r.get(k + "_std") or 0.0)
+    if not cols:
+        return None
+    rkey, ypos, ylab, heads, y = [], [], [], [], 0.0
+    for ds in DATASETS:
+        trows = [(t, n, mt) for t, n, mt in OV_TASKS if any((c, ds, t) in val for c in cols)]
+        if not trows:
+            continue
+        heads.append((y, ds)); y += 1
+        for t, n, mt in trows:
+            rkey.append((ds, t, mt)); ypos.append(y); ylab.append(f"{n}  <span style='color:#999'>{mt}</span>"); y += 1
+        y += 0.35
+    nan = float("nan")
+    M = np.array([[val.get((c, ds, t), nan) for c in cols] for ds, t, _ in rkey])
+    SD = np.array([[sd.get((c, ds, t), nan) for c in cols] for ds, t, _ in rkey])
+    S = np.zeros_like(M)
+    for i, (_ds, _t, mt) in enumerate(rkey):
+        g = M[i] - OV_CHANCE[mt]
+        best = np.nanmax(g)
+        S[i] = np.clip(g / best, 0, None) if best > 0 else 0
+        if best < 0.1:
+            S[i] = S[i] * max(best, 0) / 0.1
+        S[i][np.isnan(M[i])] = nan
+    order = np.argsort(-np.nanmean(np.where(np.isnan(S), 0, S), axis=0), kind="stable")
+    M, SD, S = M[:, order], SD[:, order], S[:, order]
+    cols = [cols[j] for j in order]
+    fig = go.Figure()
+    for i, yy in enumerate(ypos):
+        txt = ["" if np.isnan(v) else f"{v:.2f}" for v in M[i]]
+        hov = ["" if np.isnan(v) else f"{v:.3f} ± {s:.3f}" for v, s in zip(M[i], SD[i])]
+        fig.add_trace(go.Heatmap(
+            z=[S[i]], x=cols, y=[yy], text=[txt], customdata=[hov], texttemplate="%{text}",
+            textfont=dict(size=12, color="#222"), xgap=3, ygap=3, showscale=False, hoverongaps=False,
+            colorscale=[[0, "#f4f4f2"], [0.5, "#bfd9cf"], [1, "#5fa58c"]], zmin=0, zmax=1,
+            hovertemplate="%{x}<br>" + rkey[i][0] + " " + ylab[i] + ": %{customdata} over 5 seeds<extra></extra>"))
+        if np.all(np.isnan(M[i])):
+            continue
+        b = int(np.nanargmax(M[i])); thr = M[i][b] - (0 if np.isnan(SD[i][b]) else SD[i][b])
+        for j in np.where(M[i] >= thr - 1e-12)[0]:
+            if S[i][j] > 0:
+                fig.add_shape(type="rect", x0=j - 0.47, x1=j + 0.47, y0=yy - 0.45, y1=yy + 0.45,
+                              line=dict(color="#1f4e3d", width=2))
+    for yy, ds in heads:
+        fig.add_annotation(x=-0.5, y=yy + 0.15, xref="x", yref="y", text=f"<b>{ds}</b>", showarrow=False,
+                           xanchor="left", font=dict(size=15, color="#1f3b4d"))
+        fig.add_shape(type="line", x0=-0.5, x1=len(cols) - 0.5, y0=yy + 0.48, y1=yy + 0.48,
+                      line=dict(color="#9aa8b1", width=1))
+    fig.update_layout(
+        xaxis=dict(side="top", tickangle=0, tickfont=dict(size=11), showgrid=False, zeroline=False),
+        yaxis=dict(autorange="reversed", tickvals=ypos, ticktext=ylab, tickfont=dict(size=12), showgrid=False, zeroline=False),
+        height=int(36 * (y + 1)) + 90, width=96 * len(cols) + 200, margin=dict(l=10, r=10, t=60, b=10),
+        plot_bgcolor="white", paper_bgcolor="white")
+    return fig
+
+
 def make_interactive(itable, out_html, extra_html=""):
     """itable: {(probe, model, preprocessing, dataset): {task: row}}. Every (probe, model,
     preprocessing) gets its own traces; dropdowns above the plot pick the probe and the
@@ -429,6 +515,23 @@ def make_interactive(itable, out_html, extra_html=""):
     except Exception as e:
         print(f"plotly png export failed, keeping matplotlib png: {e}")
 
+    ov = {}
+    for p_ in probes:
+        for v_ in views:
+            f_ = make_overview(itable, p_, v_)
+            if f_ is not None:
+                ov[f"{p_}|{v_}"] = _json.loads(f_.to_json())
+    try:
+        sf = make_overview(itable, "linear" if "linear" in probes else default_probe, "turboprep")
+        if sf is not None:
+            sf.update_layout(title=dict(text="BrainFMBench overview · linear probe · rigid turboprep · held out test", x=0.01), margin=dict(t=110))
+            sf.write_image(os.path.join(REPO, "leaderboard_overview.png"), scale=2)
+            print("wrote overview png")
+    except Exception as e:
+        print(f"overview png export failed: {e}")
+    ovhtml = ('<h2 style="margin:18px 0 2px">Overview</h2><div class="sub">Held out test. Color: improvement over chance, '
+              'relative to the best model in each row; pale rows are near chance. Boxed: best model and any model within '
+              'one seed SD of it. Hover for mean ± SD over 5 seeds.</div><div id="ovplot"></div>')
     plot = fig.to_html(full_html=False, include_plotlyjs="cdn", div_id="lbplot",
                        config={"responsive": True, "displaylogo": False})
     import html as _h
@@ -450,6 +553,7 @@ def make_interactive(itable, out_html, extra_html=""):
 (function () {
   var gd = document.getElementById('lbplot');
   var VIEWS = """ + _json.dumps([v for v, _ in VIEW_PREPS]) + """;
+  var OV = """ + _json.dumps(ov) + """;
   function apply() {
     var probe = document.getElementById('selProbe').value;
     var chk = document.getElementById('chkAffine');
@@ -465,6 +569,8 @@ def make_interactive(itable, out_html, extra_html=""):
       if (show) seen[t.name] = true;
       legend.push(show);
     });
+    var k = probe + '|' + prep;
+    if (OV[k]) Plotly.react('ovplot', OV[k].data, OV[k].layout, {displayModeBar: false, responsive: true});
     Plotly.restyle(gd, {visible: vis, showlegend: legend});
     var lay = {};
     Object.keys(cats).forEach(function (ax) { lay[ax + '.categoryarray'] = cats[ax]; });
@@ -496,7 +602,7 @@ def make_interactive(itable, out_html, extra_html=""):
             "</head><body>\n"
             "<p><a href=\"https://github.com/epics-lab/BrainFMBench\">epics-lab/BrainFMBench</a>"
             " &middot; auto generated from <code>models/*/results.json</code></p>\n"
-            + controls + "\n" + plot + "\n" + prep_ctl + "\n" + extra_html + "\n" + script + "\n</body></html>\n")
+            + controls + "\n" + ovhtml + "\n" + prep_ctl + "\n<h2 style=\"margin:18px 0 2px\">Detail</h2>\n" + plot + "\n" + extra_html + "\n" + script + "\n</body></html>\n")
     print(f"Wrote {out_html}")
 
 
@@ -740,6 +846,8 @@ def main():
         "Downstream probing of frozen features with a linear and a RandomForest probe, held out test. The static figure shows the linear probe on rigid turboprep; the interactive site switches probe and preprocessing.",
         "Classification reports balanced accuracy and AUC; regression reports MAE and R². Arrows mark the better direction.", "",
     ]
+    if os.path.isfile(os.path.join(REPO, "leaderboard_overview.png")):
+        lines += [f"[![BrainFMBench overview](leaderboard_overview.png?v={_file_v('leaderboard_overview.png')})]({PAGES_URL})", ""]
     if fig_ok:
         lines += [
             f"[![Leaderboard boxplots](leaderboard_boxplots.png?v={_png_v()})]({PAGES_URL})", "",
@@ -761,7 +869,10 @@ def main():
     if os.path.isfile(readme):
         blk = ["<!-- LEADERBOARD:START -->", ""]
         if fig_ok:
-            blk += [f"[![Leaderboard boxplots](leaderboard_boxplots.png?v={_png_v()})]({PAGES_URL})", "",
+            ovp = os.path.isfile(os.path.join(REPO, "leaderboard_overview.png"))
+            img = (f"[![BrainFMBench overview](leaderboard_overview.png?v={_file_v('leaderboard_overview.png')})]({PAGES_URL})" if ovp
+                   else f"[![Leaderboard boxplots](leaderboard_boxplots.png?v={_png_v()})]({PAGES_URL})")
+            blk += [img, "",
                     f"**[Interactive version]({PAGES_URL})**", ""]
         blk += [f"_Held out test, mean ± std over 5 seeds. There is no single overall score; "
                 f"sort by task on the [interactive site]({PAGES_URL})._", ""]
