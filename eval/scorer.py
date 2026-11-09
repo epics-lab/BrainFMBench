@@ -217,7 +217,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--features", required=True)
     p.add_argument("--labels", required=True)
-    p.add_argument("--dataset", required=True, choices=["NKI", "HBN", "PNC"])
+    p.add_argument("--dataset", required=True, choices=["NKI", "HBN", "PNC", "BHRC", "CCNP"])
     p.add_argument("--task", required=True, choices=list(TASK_TYPE.keys()))
     p.add_argument("--model-name", default=None)
     p.add_argument("--probe", default="rf", choices=list(PROBES))

@@ -75,18 +75,20 @@ for the points). Earlier versions stay browsable on the site; see [`CHANGELOG.md
 
 ## Tasks & data
 
-Models are evaluated on three datasets from the [Reproducible Brain Charts](https://reprobrainchart.github.io) (RBC)
+Models are evaluated on five datasets from the [Reproducible Brain Charts](https://reprobrainchart.github.io) (RBC)
 initiative:
 
 - **NKI** — Nathan Kline Institute Rockland Sample (958 subjects)
 - **HBN** — Healthy Brain Network (997 subjects)
 - **PNC** — Philadelphia Neurodevelopmental Cohort (1439 subjects)
+- **BHRC** — Brazilian High Risk Cohort (542 subjects)
+- **CCNP** — Chinese Color Nest Project (178 subjects)
 
 Labels are derived from RBC and distributed under CC BY-NC-SA 4.0; see [labels/README.md](labels/README.md).
 
 Tasks: **sex** classification (balanced accuracy and AUC), **age** / **BMI** regression (mean absolute
-error and R²) and, on PNC, the RBC harmonized **p factor**, both as zero vs nonzero classification (balanced accuracy
-and AUC) and as regression (MAE and R²). Inputs are offered with four preprocessing options:
+error and R²) and the RBC harmonized **p factor** as regression (MAE and R²) on PNC, BHRC and CCNP, plus zero vs nonzero
+classification (balanced accuracy and AUC) on PNC. Inputs are offered with four preprocessing options:
 [turboprep](https://github.com/LemuelPuglisi/turboprep) with rigid registration (default), turboprep with
 affine registration to MNI 1 mm, [CAT12](https://neuro-jena.github.io/cat/) gray matter maps, and the raw T1w
 for models with their own pipeline.
