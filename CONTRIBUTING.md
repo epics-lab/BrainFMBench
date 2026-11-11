@@ -81,6 +81,7 @@ architecture: short description
 paper: https://...              # paper or preprint (DOI, arXiv, bioRxiv)
 model_card: https://...         # e.g. Hugging Face model page
 code: https://...               # public code repository
+project: https://...            # optional: project or platform the model is part of
 datasets: [NKI, HBN, PNC, BHRC, CCNP]
 tasks: [sex, age, bmi, p_factor_nonzero, p_factor, internalizing, externalizing, handedness]
 ```

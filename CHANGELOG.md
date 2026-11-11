@@ -10,6 +10,8 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - Tasks: internalizing and externalizing regression (RBC harmonized scores, MAE and R²) on all five datasets, and p factor regression on HBN and NKI, so it now runs on all five
 - Task: handedness, left vs right, as classification (balanced accuracy and AUC) on PNC, HBN and NKI, the datasets with at least 50 left handed subjects
 - Site and README: an overview heatmap of every model on every dataset and task, colored by improvement over chance relative to the best model in the row, with the best model and those within one seed SD of it boxed. It shows balanced accuracy and MAE by default; the site can switch it to AUC and R²
+- Brain2Vec is now listed as NiChart-Brain2Vec at its authors' request, with a link to NiChart in the models table. Models can add an optional `project:` link
+- Scoring runs one job per group of tasks instead of one job per model and dataset, and the leaderboard keeps the previous result for any job that fails or times out
 
 ## v2.1.0, 2026-11-08
 

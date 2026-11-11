@@ -48,6 +48,7 @@ DISPLAY_NAMES = {
     "un-CNN":          "un-CNN",
     "FS Schaefer":     "FS:\nSchaefer",
     "FS aparc":        "FS:\naparc",
+    "NiChart-Brain2Vec": "NiChart-\nBrain2Vec",
 }
 
 # (row_label, task, is_cls, metric_ylabel, box_key, dot_key)
@@ -331,7 +332,7 @@ def _in_view(prep, view):
 
 
 def _ilabel(m):
-    return DISPLAY_NAMES.get(m, m).replace("\n", " ")
+    return DISPLAY_NAMES.get(m, m).replace("-\n", "-").replace("\n", " ")
 
 
 OV_TASKS = [("sex", "Sex", True), ("age", "Age", False), ("bmi", "BMI", False),
@@ -579,7 +580,7 @@ def make_interactive(itable, out_html, extra_html=""):
         + '> <b>Affine registration</b> for turboprep models</label>'
         + f'<div class="sub">Applies only to the models that take turboprep input ({names}): '
         "checked shows turboprep with affine registration to MNI 1 mm, unchecked shows rigid turboprep. "
-        "AnatCL (CAT12), FreeSurfer and Brain2Vec (raw) use their own preprocessing and do not change. "
+        "AnatCL (CAT12), FreeSurfer and NiChart-Brain2Vec (raw) use their own preprocessing and do not change. "
         "The table below follows the same setting.</div></div>")
     script = """<script>
 (function () {
@@ -671,7 +672,7 @@ def load_meta():
 
 def _links(y):
     out = []
-    for key, label in (("paper", "paper"), ("model_card", "model card"), ("code", "code")):
+    for key, label in (("paper", "paper"), ("model_card", "model card"), ("code", "code"), ("project", "project")):
         v = str(y.get(key) or "").split()[0] if y.get(key) else ""
         if v.startswith("http") and "private" not in str(y.get(key)):
             out.append((label, v))

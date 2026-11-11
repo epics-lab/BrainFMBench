@@ -2,7 +2,7 @@
   {
     "dataset": "NKI",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_acc_mean": 0.8557142857142859,
     "test_acc_std": 0.04416907322412882,
@@ -81,7 +81,7 @@
   {
     "dataset": "NKI",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_acc_mean": 0.8811904761904762,
     "test_acc_std": 0.031419551375167325,
@@ -160,7 +160,7 @@
   {
     "dataset": "NKI",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 4.831529335435077,
     "test_mae_std": 0.430638194842226,
@@ -239,7 +239,7 @@
   {
     "dataset": "NKI",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 4.776640382940437,
     "test_mae_std": 0.22264968346588532,
@@ -318,7 +318,7 @@
   {
     "dataset": "NKI",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 2.9789946716544318,
     "test_mae_std": 0.2813563888963844,
@@ -397,7 +397,7 @@
   {
     "dataset": "NKI",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 2.349269810051891,
     "test_mae_std": 0.2489633699822834,
@@ -476,7 +476,7 @@
   {
     "dataset": "NKI",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.7859456920017951,
     "test_mae_std": 0.03494537465120127,
@@ -555,7 +555,7 @@
   {
     "dataset": "NKI",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.8042546492147371,
     "test_mae_std": 0.04942033454801052,
@@ -634,7 +634,7 @@
   {
     "dataset": "NKI",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.8686618898100165,
     "test_mae_std": 0.1472235334467031,
@@ -713,7 +713,7 @@
   {
     "dataset": "NKI",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.8834054039375474,
     "test_mae_std": 0.11766071902422523,
@@ -792,7 +792,7 @@
   {
     "dataset": "NKI",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.41669627696162,
     "test_mae_std": 0.11829623255660278,
@@ -871,7 +871,7 @@
   {
     "dataset": "NKI",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.3863332444052542,
     "test_mae_std": 0.11299169108518481,
@@ -950,7 +950,7 @@
   {
     "dataset": "NKI",
     "task": "handedness",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_acc_mean": 0.5,
     "test_acc_std": 0.0,
@@ -1029,7 +1029,7 @@
   {
     "dataset": "NKI",
     "task": "handedness",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_acc_mean": 0.4988095238095238,
     "test_acc_std": 0.002380952380952372,
@@ -1108,7 +1108,7 @@
   {
     "dataset": "HBN",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_acc_mean": 0.7267156862745099,
     "test_acc_std": 0.04778626129496384,
@@ -1187,7 +1187,7 @@
   {
     "dataset": "HBN",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_acc_mean": 0.7932598039215687,
     "test_acc_std": 0.03724683865268811,
@@ -1266,7 +1266,7 @@
   {
     "dataset": "HBN",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 1.4867019930996501,
     "test_mae_std": 0.0884477176658493,
@@ -1345,7 +1345,7 @@
   {
     "dataset": "HBN",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 1.2046980671092868,
     "test_mae_std": 0.07158913990026737,
@@ -1424,7 +1424,7 @@
   {
     "dataset": "HBN",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 3.0148853505316335,
     "test_mae_std": 0.2719768106623101,
@@ -1503,7 +1503,7 @@
   {
     "dataset": "HBN",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 2.519507800976205,
     "test_mae_std": 0.20557142230359854,
@@ -1582,7 +1582,7 @@
   {
     "dataset": "HBN",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.8205720289148044,
     "test_mae_std": 0.07257873579406655,
@@ -1661,7 +1661,7 @@
   {
     "dataset": "HBN",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.8173585740738967,
     "test_mae_std": 0.08160559749552529,
@@ -1740,7 +1740,7 @@
   {
     "dataset": "HBN",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.8723267703964417,
     "test_mae_std": 0.04294059258422531,
@@ -1819,7 +1819,7 @@
   {
     "dataset": "HBN",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.862058554498352,
     "test_mae_std": 0.04592829981269457,
@@ -1898,7 +1898,7 @@
   {
     "dataset": "HBN",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.8024573759958619,
     "test_mae_std": 0.04555545012519503,
@@ -1977,7 +1977,7 @@
   {
     "dataset": "HBN",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.79821207948599,
     "test_mae_std": 0.04723563657591927,
@@ -2056,7 +2056,7 @@
   {
     "dataset": "HBN",
     "task": "handedness",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_acc_mean": 0.49764705882352944,
     "test_acc_std": 0.0028817526385684347,
@@ -2135,7 +2135,7 @@
   {
     "dataset": "HBN",
     "task": "handedness",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_acc_mean": 0.5,
     "test_acc_std": 0.0,
@@ -2214,7 +2214,7 @@
   {
     "dataset": "PNC",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_acc_mean": 0.801394344069128,
     "test_acc_std": 0.05089872557852734,
@@ -2293,7 +2293,7 @@
   {
     "dataset": "PNC",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_acc_mean": 0.8662608012568735,
     "test_acc_std": 0.026283307033161295,
@@ -2372,7 +2372,7 @@
   {
     "dataset": "PNC",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 1.544531784373795,
     "test_mae_std": 0.10042750385943656,
@@ -2451,7 +2451,7 @@
   {
     "dataset": "PNC",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 1.4139413233239027,
     "test_mae_std": 0.03816312716068365,
@@ -2530,7 +2530,7 @@
   {
     "dataset": "PNC",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 2.9657565679110376,
     "test_mae_std": 0.28734871723700894,
@@ -2609,7 +2609,7 @@
   {
     "dataset": "PNC",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 2.569878421285051,
     "test_mae_std": 0.22841455530864072,
@@ -2688,7 +2688,7 @@
   {
     "dataset": "PNC",
     "task": "p_factor_nonzero",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_acc_mean": 0.4889705882352941,
     "test_acc_std": 0.012507402730736515,
@@ -2767,7 +2767,7 @@
   {
     "dataset": "PNC",
     "task": "p_factor_nonzero",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_acc_mean": 0.49747899159663866,
     "test_acc_std": 0.005042016806722693,
@@ -2846,7 +2846,7 @@
   {
     "dataset": "PNC",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.7843004001116013,
     "test_mae_std": 0.04301224804598242,
@@ -2925,7 +2925,7 @@
   {
     "dataset": "PNC",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.789077412097211,
     "test_mae_std": 0.041570562278771546,
@@ -3004,7 +3004,7 @@
   {
     "dataset": "PNC",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.8574134007042316,
     "test_mae_std": 0.022113473080144858,
@@ -3083,7 +3083,7 @@
   {
     "dataset": "PNC",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.8540025833067704,
     "test_mae_std": 0.024277982754143262,
@@ -3162,7 +3162,7 @@
   {
     "dataset": "PNC",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.6175000979498585,
     "test_mae_std": 0.02088614538984986,
@@ -3241,7 +3241,7 @@
   {
     "dataset": "PNC",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.6169876238675106,
     "test_mae_std": 0.021843556716748806,
@@ -3320,7 +3320,7 @@
   {
     "dataset": "PNC",
     "task": "handedness",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_acc_mean": 0.4991666666666667,
     "test_acc_std": 0.0016666666666666607,
@@ -3399,7 +3399,7 @@
   {
     "dataset": "PNC",
     "task": "handedness",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_acc_mean": 0.5,
     "test_acc_std": 0.0,
@@ -3478,7 +3478,7 @@
   {
     "dataset": "BHRC",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_acc_mean": 0.6523141654978962,
     "test_acc_std": 0.05319877465783547,
@@ -3557,7 +3557,7 @@
   {
     "dataset": "BHRC",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_acc_mean": 0.7500701262272089,
     "test_acc_std": 0.09618455652197345,
@@ -3636,7 +3636,7 @@
   {
     "dataset": "BHRC",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 1.350934753796126,
     "test_mae_std": 0.06717653105904133,
@@ -3715,7 +3715,7 @@
   {
     "dataset": "BHRC",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 1.340897541160448,
     "test_mae_std": 0.05707477989685648,
@@ -3794,7 +3794,7 @@
   {
     "dataset": "BHRC",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 3.4514304440602883,
     "test_mae_std": 0.31985730031357795,
@@ -3873,7 +3873,7 @@
   {
     "dataset": "BHRC",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 3.0802281418255992,
     "test_mae_std": 0.18730214281660687,
@@ -3952,7 +3952,7 @@
   {
     "dataset": "BHRC",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.7285183661092824,
     "test_mae_std": 0.06593895401018171,
@@ -4031,7 +4031,7 @@
   {
     "dataset": "BHRC",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.7152352784521028,
     "test_mae_std": 0.06302610391371821,
@@ -4110,7 +4110,7 @@
   {
     "dataset": "BHRC",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.691604860063072,
     "test_mae_std": 0.07207337225390817,
@@ -4189,7 +4189,7 @@
   {
     "dataset": "BHRC",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.6918063360748008,
     "test_mae_std": 0.07566461157960686,
@@ -4268,7 +4268,7 @@
   {
     "dataset": "BHRC",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.6888365502324075,
     "test_mae_std": 0.10695578216058106,
@@ -4347,7 +4347,7 @@
   {
     "dataset": "BHRC",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.6859128421147102,
     "test_mae_std": 0.10963133712285036,
@@ -4426,7 +4426,7 @@
   {
     "dataset": "CCNP",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_acc_mean": 0.45972222222222225,
     "test_acc_std": 0.10770831094634054,
@@ -4505,7 +4505,7 @@
   {
     "dataset": "CCNP",
     "task": "sex",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_acc_mean": 0.5,
     "test_acc_std": 0.08914892519934008,
@@ -4584,7 +4584,7 @@
   {
     "dataset": "CCNP",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 2.7799609181175677,
     "test_mae_std": 0.6255681374401076,
@@ -4663,7 +4663,7 @@
   {
     "dataset": "CCNP",
     "task": "age",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 2.607295880884428,
     "test_mae_std": 0.5080210314932154,
@@ -4742,7 +4742,7 @@
   {
     "dataset": "CCNP",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 3.0751021332774884,
     "test_mae_std": 0.25984832444943823,
@@ -4821,7 +4821,7 @@
   {
     "dataset": "CCNP",
     "task": "bmi",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 2.9879385617708643,
     "test_mae_std": 0.22952790867296494,
@@ -4900,7 +4900,7 @@
   {
     "dataset": "CCNP",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.7727093304438859,
     "test_mae_std": 0.10333838686418023,
@@ -4979,7 +4979,7 @@
   {
     "dataset": "CCNP",
     "task": "p_factor",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.7356690367202524,
     "test_mae_std": 0.10098242932805362,
@@ -5058,7 +5058,7 @@
   {
     "dataset": "CCNP",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.5286165008759365,
     "test_mae_std": 0.030233925294054064,
@@ -5137,7 +5137,7 @@
   {
     "dataset": "CCNP",
     "task": "internalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.4981316921779181,
     "test_mae_std": 0.034737930546901205,
@@ -5216,7 +5216,7 @@
   {
     "dataset": "CCNP",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "rf",
     "test_mae_mean": 0.6463146932728,
     "test_mae_std": 0.09454441478369374,
@@ -5295,7 +5295,7 @@
   {
     "dataset": "CCNP",
     "task": "externalizing",
-    "model": "Brain2Vec",
+    "model": "NiChart-Brain2Vec",
     "probe": "linear",
     "test_mae_mean": 0.6119356577655097,
     "test_mae_std": 0.1095303494948367,
