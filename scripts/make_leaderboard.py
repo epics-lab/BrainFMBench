@@ -340,13 +340,27 @@ OV_TASKS = [("sex", "Sex", True), ("age", "Age", False), ("bmi", "BMI", False),
             ("internalizing", "Internalizing", False), ("externalizing", "Externalizing", False),
             ("handedness", "Handedness", True)]
 # metric set -> (classification, regression): (result key, label)
-OV_METRICS = {"main": (("test_acc", "bal acc"), ("test_mae", "MAE")),
-              "alt": (("test_auc", "AUC"), ("test_r2", "R²"))}
+OV_METRICS = {"main": (("test_acc", "bal acc ↑"), ("test_mae", "MAE ↓")),
+              "alt": (("test_auc", "AUC ↑"), ("test_r2", "R² ↑"))}
 OV_METRIC_NAMES = [("main", "balanced accuracy and MAE"), ("alt", "AUC and R²")]
 OV_PREP = {"turboprep": "rigid", "turboprep-affine": "affine", "cat12": "CAT12", "freesurfer": "FreeSurfer", "raw": "raw"}
 
 
 _DUMMY = {}
+_NSUB = {}
+
+
+def _n_subjects(ds, task=None):
+    """Subjects in labels/<ds>.csv, or those with a value for one task."""
+    if ds not in _NSUB:
+        import csv
+        path = os.path.join(REPO, "labels", f"{ds}.csv")
+        rows = list(csv.DictReader(open(path))) if os.path.isfile(path) else []
+        cnt = {"": len(rows)}
+        for c in (rows[0].keys() if rows else []):
+            cnt[c] = sum(1 for r in rows if (r.get(c) or "").strip() != "")
+        _NSUB[ds] = cnt
+    return _NSUB[ds].get(task or "", 0)
 
 
 def _ov_chance(ds, t, key):
@@ -388,7 +402,8 @@ def make_overview(itable, probe, view, metric="main"):
             continue
         heads.append((y, ds)); y += 1
         for t, n, mt in trows:
-            rkey.append((ds, t, mt[0])); ypos.append(y); ylab.append(f"{n}  <span style='color:#999'>{mt[1]}</span>"); y += 1
+            rkey.append((ds, t, mt[0])); ypos.append(y)
+            ylab.append(f"{n}  <span style='color:#999'>{mt[1]} · n={_n_subjects(ds, t)}</span>"); y += 1
         y += 0.35
     nan = float("nan")
     M = np.array([[val.get((c, ds, t), nan) for c in cols] for ds, t, _ in rkey])
@@ -408,7 +423,14 @@ def make_overview(itable, probe, view, metric="main"):
     cols = [cols[j] for j in order]
     fig = go.Figure()
     for i, yy in enumerate(ypos):
-        txt = ["" if np.isnan(v) else f"{v:.2f}" for v in M[i]]
+        # 2 decimals, more (up to 4) when the best and the runner up would otherwise print the same
+        vals = np.sort(M[i][~np.isnan(M[i])])
+        if rkey[i][2] != "test_mae":
+            vals = vals[::-1]
+        dec = 2
+        while dec < 4 and len(vals) > 1 and vals[0] != vals[1] and f"{vals[0]:.{dec}f}" == f"{vals[1]:.{dec}f}":
+            dec += 1
+        txt = ["" if np.isnan(v) else f"{v:.{dec}f}" for v in M[i]]
         hov = ["" if np.isnan(v) else f"{v:.3f} ± {s:.3f}" for v, s in zip(M[i], SD[i])]
         fig.add_trace(go.Heatmap(
             z=[S[i]], x=cols, y=[yy], text=[txt], customdata=[hov], texttemplate="%{text}",
@@ -417,16 +439,17 @@ def make_overview(itable, probe, view, metric="main"):
             hovertemplate="%{x}<br>" + rkey[i][0] + " " + ylab[i] + ": %{customdata} over 5 seeds<extra></extra>"))
         if np.all(np.isnan(M[i])):
             continue
+        # Box: the best model in the row for its metric (lowest MAE, highest otherwise)
         low = rkey[i][2] == "test_mae"
-        b = int(np.nanargmin(M[i]) if low else np.nanargmax(M[i]))
-        s_ = 0 if np.isnan(SD[i][b]) else SD[i][b]
-        near = M[i] <= M[i][b] + s_ + 1e-12 if low else M[i] >= M[i][b] - s_ - 1e-12
-        for j in np.where(near)[0]:
-            if S[i][j] > 0:
-                fig.add_shape(type="rect", x0=j - 0.47, x1=j + 0.47, y0=yy - 0.45, y1=yy + 0.45,
-                              line=dict(color="#1f4e3d", width=2))
+        best_v = np.nanmin(M[i]) if low else np.nanmax(M[i])
+        tied = np.where(np.isclose(M[i], best_v, rtol=0, atol=1e-12))[0]
+        if len(tied) == np.sum(~np.isnan(M[i])) or (rkey[i][2] == "test_acc" and np.isclose(best_v, 0.5)):
+            continue  # all tied, or the top balanced accuracy is exactly 0.5 (majority class): no best model
+        for j in tied:
+            fig.add_shape(type="rect", x0=j - 0.47, x1=j + 0.47, y0=yy - 0.45, y1=yy + 0.45,
+                          line=dict(color="#1f4e3d", width=2))
     for yy, ds in heads:
-        fig.add_annotation(x=-0.5, y=yy + 0.15, xref="x", yref="y", text=f"<b>{ds}</b>", showarrow=False,
+        fig.add_annotation(x=-0.5, y=yy + 0.15, xref="x", yref="y", text=f"<b>{ds}</b>  <span style='color:#777'>n={_n_subjects(ds)}</span>", showarrow=False,
                            xanchor="left", font=dict(size=15, color="#1f3b4d"))
         fig.add_shape(type="line", x0=-0.5, x1=len(cols) - 0.5, y0=yy + 0.48, y1=yy + 0.48,
                       line=dict(color="#9aa8b1", width=1))
@@ -562,9 +585,9 @@ def make_interactive(itable, out_html, extra_html=""):
     ovhtml = ('<h2 style="margin:18px 0 2px">Overview</h2><div class="ctl"><label>Metric <select id="selMetric">'
               + "".join(f'<option value="{m_}"{" selected" if m_ == "main" else ""}>{t_}</option>' for m_, t_ in OV_METRIC_NAMES)
               + '</select></label></div><div class="sub">Held out test. Color: improvement over chance, relative to the best '
-              'model in each row; pale rows are near chance. Chance is 0.5 for balanced accuracy and AUC, 0 for R², and for '
-              'MAE the error of predicting the training mean, so MAE color is the fraction of that error removed. Boxed: best '
-              'model and any model within one seed SD of it. Hover for mean ± SD over 5 seeds.</div><div id="ovplot"></div>')
+              'model in each row; pale rows are near chance. Arrows give the direction: ↑ higher is better, ↓ lower is better. Chance is 0.5 for balanced accuracy and AUC, 0 for R², and for '
+              'MAE the error of predicting the training mean, so MAE color is the fraction of that error removed. Boxed: the best '
+              'model in each row. n is the number of subjects with that label. Hover for mean ± SD over 5 seeds.</div><div id="ovplot"></div>')
     plot = fig.to_html(full_html=False, include_plotlyjs="cdn", div_id="lbplot",
                        config={"responsive": True, "displaylogo": False})
     import html as _h
