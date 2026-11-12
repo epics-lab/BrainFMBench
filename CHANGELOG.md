@@ -2,7 +2,7 @@
 
 BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#versioning).
 
-## v2.2.0, unreleased
+## v2.2.0, 2026-11-11
 
 - Datasets: BHRC (Brazilian High Risk Cohort, 542 subjects) and CCNP (Chinese Color Nest Project, 178 subjects) from Reproducible Brain Charts, subjects passing RBC T1w QC, with raw, turboprep, turboprep-affine and CAT12 inputs. BHRC is longitudinal: the first session passing QC is used, with labels from that session
 - Tasks on the new datasets: sex, age, BMI and p factor regression
@@ -12,6 +12,7 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - Site and README: an overview heatmap of every model on every dataset and task, colored by improvement over chance relative to the best model in the row, with the best model and those within one seed SD of it boxed. It shows balanced accuracy and MAE by default; the site can switch it to AUC and R²
 - Brain2Vec is now listed as NiChart-Brain2Vec at its authors' request, with a link to NiChart in the models table. Models can add an optional `project:` link
 - Scoring runs one job per group of tasks instead of one job per model and dataset, and the leaderboard keeps the previous result for any job that fails or times out
+- The leaderboard is mirrored as a Hugging Face Space, https://huggingface.co/spaces/epics-lab/BrainFMBench, updated with every rebuild
 
 ## v2.1.0, 2026-11-08
 
