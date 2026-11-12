@@ -147,3 +147,5 @@ Results are versioned so every number can be cited and reproduced.
 - **Major release, e.g. 2.0:** a new probe head or CV scheme, or any change to existing numbers, such as label corrections.
 
 Each release is tagged, listed in [CHANGELOG.md](CHANGELOG.md) and archived on Zenodo with a DOI.
+
+Releases are quarterly: changes to datasets, tasks, preprocessing or scoring are collected and released together every three months, with the next release planned for March 2027. Suggestions are welcome as an [issue](https://github.com/epics-lab/BrainFMBench/issues/new?template=suggestion.yml) or a PR; suggestions received before a release are considered for it.
