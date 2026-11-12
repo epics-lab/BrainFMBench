@@ -189,6 +189,41 @@ jobs:
         with:
           path: site
 
+      # Mirror the same static site to a Hugging Face Space (issue #35). Skipped until the
+      # HF_TOKEN secret (write access to the Space) and the HF_SPACE variable are set.
+      - name: Mirror leaderboard to Hugging Face Space
+        if: github.ref == 'refs/heads/main' && vars.HF_SPACE != ''
+        continue-on-error: true
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        run: |
+          pip install -q huggingface_hub==0.26.2
+          rm -rf /tmp/space && cp -r site /tmp/space
+          cat > /tmp/space/README.md <<'MD'
+          ---
+          title: BrainFMBench
+          emoji: 🧠
+          colorFrom: green
+          colorTo: blue
+          sdk: static
+          app_file: index.html
+          pinned: true
+          license: mit
+          short_description: Living benchmark of structural MRI foundation models
+          ---
+
+          Mirror of the BrainFMBench leaderboard, rebuilt automatically from
+          https://github.com/epics-lab/BrainFMBench on every update.
+          MD
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+          HfApi(token=os.environ["HF_TOKEN"]).upload_folder(
+              repo_id=os.environ["HF_SPACE"], repo_type="space", folder_path="/tmp/space",
+              commit_message="Update leaderboard from epics-lab/BrainFMBench", delete_patterns=["*"])
+          PY
+
       - name: Commit results + leaderboard
         run: |
           git config user.name  "github-actions[bot]"
