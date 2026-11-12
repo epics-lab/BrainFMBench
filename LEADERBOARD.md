@@ -3,7 +3,7 @@
 Downstream probing of frozen features with a linear and a RandomForest probe, held out test. The static figure shows the linear probe on rigid turboprep; the interactive site switches probe and preprocessing.
 Classification reports balanced accuracy and AUC; regression reports MAE and R². Arrows mark the better direction.
 
-[![BrainFMBench overview](leaderboard_overview.png?v=f9473671)](https://www.epics-lab.ca/BrainFMBench/)
+[![BrainFMBench overview](leaderboard_overview.png?v=c18ca472)](https://www.epics-lab.ca/BrainFMBench/)
 
 [![Leaderboard boxplots](leaderboard_boxplots.png?v=30006f8f)](https://www.epics-lab.ca/BrainFMBench/)
 
