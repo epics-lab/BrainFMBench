@@ -1,0 +1,34 @@
+name: Suggest a dataset, task or model
+description: Ideas for the next quarterly release
+title: "[Suggestion] "
+labels: ["suggestion"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What are you suggesting?
+      options:
+        - Dataset
+        - Task
+        - Model
+        - Preprocessing option
+        - Presentation or site
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: Description
+      description: What it is, with links to the paper, code, weights or data.
+    validations:
+      required: true
+  - type: textarea
+    id: access
+    attributes:
+      label: Access and license
+      description: For datasets and models, how it can be accessed and under which license or data use agreement.
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it would help the benchmark

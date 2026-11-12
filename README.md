@@ -74,6 +74,8 @@ to switch between the RandomForest and linear probes and between rigid and affin
 Scores come from probes on frozen features (5 fold CV across 5 seeds for the box, held out test
 for the points). Earlier versions stay browsable on the site; see [`CHANGELOG.md`](CHANGELOG.md).
 
+**Releases are quarterly.** New datasets, tasks and preprocessing options are batched into one release every three months; the next is planned for **March 2027**. New models do not wait for a release: they appear on the leaderboard as soon as their PR is merged. Suggestions for datasets, tasks or models are welcome as an [issue](https://github.com/epics-lab/BrainFMBench/issues/new?template=suggestion.yml) or a PR.
+
 ## Tasks & data
 
 Models are evaluated on five datasets from the [Reproducible Brain Charts](https://reprobrainchart.github.io) (RBC)
