@@ -95,7 +95,7 @@ it is shown as a footnote next to your results.
 
 One direct-download URL per line. Supported hosts:
 
-- HuggingFace — use the `/resolve/` URL, e.g.
+- Hugging Face — use the `/resolve/` URL, e.g.
   `https://huggingface.co/<user>/<model>/resolve/main/checkpoint.pth`
 - Zenodo, GitHub Releases, or an institutional raw link (`/-/raw/`)
 

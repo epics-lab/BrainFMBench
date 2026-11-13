@@ -55,7 +55,7 @@ jobs:
             exit 0
           fi
           CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}" 2>/dev/null || true)
-          if [ -z "$CHANGED" ] || echo "$CHANGED" | grep -qE '^(eval/scorer\.py|labels/|scripts/score_all\.py)'; then
+          if [ -z "$CHANGED" ] || echo "$CHANGED" | grep -qE '^(eval/scorer\.py|labels/.*\.csv|scripts/score_all\.py)'; then
             echo "all=true" >> "$GITHUB_OUTPUT"
           else
             SLUGS=$(echo "$CHANGED" | grep '^models/' | cut -d/ -f2 | sort -u | tr '\n' ' ')

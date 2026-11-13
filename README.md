@@ -15,7 +15,7 @@
 # BrainFMBench
 
 A living benchmark for **brain structural MRI foundation models**. Contributors
-submit a model; model is applied to MRI datasets to extract features; features are
+submit a model; the model is applied to MRI datasets to extract features; features are
 fed into downstream learners; the leaderboard updates automatically.
 
 <!-- LEADERBOARD:START -->
@@ -72,8 +72,9 @@ Model details, papers and model cards: [`LEADERBOARD.md`](LEADERBOARD.md#models)
 
 See [`LEADERBOARD.md`](LEADERBOARD.md) for the full table and the [interactive site](https://www.epics-lab.ca/BrainFMBench/)
 to switch between the RandomForest and linear probes and between rigid and affine turboprep.
-Scores come from probes on frozen features (5 fold CV across 5 seeds for the box, held out test
-for the points). Earlier versions stay browsable on the site; see [`CHANGELOG.md`](CHANGELOG.md).
+Scores come from probes on frozen features. The overview heatmap shows the held out test mean over
+5 seeds, with the best model in each row boxed; the boxplots show 5 fold CV across 5 seeds as the box and
+the held out test results as points. Earlier versions stay browsable on the site; see [`CHANGELOG.md`](CHANGELOG.md).
 
 **Releases are quarterly.** New datasets, tasks and preprocessing options are batched into one release every three months; the next is planned for **March 2027**. New models do not wait for a release: they appear on the leaderboard as soon as their PR is merged. Suggestions for datasets, tasks or models are welcome as an [issue](https://github.com/epics-lab/BrainFMBench/issues/new?template=suggestion.yml) or a PR.
 
@@ -103,7 +104,7 @@ for models with their own pipeline.
 BrainFMBench splits the work between a computing cluster and GitHub actions:
 
 ```
-  contributor PR                     Compute Canada (rorqual)          GitHub Actions
+  contributor PR                     Alliance cluster (Rorqual)        GitHub Actions
   ─────────────                      ────────────────────────         ─────────
   model.yaml                                                          validate PR
   extract.py        ── merge ──▶     extract features    ──▶       score features
@@ -135,7 +136,7 @@ adding `models/<your-model>/` with:
 
 - **`model.yaml`** — metadata (name, preprocessing, embedding_dim, datasets, tasks)
 - **`extract.py`** — defines `extract(input_dir, output_csv, weights_dir)`
-- **`weights.txt`** — direct-download URL(s) to your checkpoint(s) (HuggingFace,
+- **`weights.txt`** — direct-download URL(s) to your checkpoint(s) (Hugging Face,
   Zenodo, etc.)
 - **`requirements.txt`** — optional; pinned dependencies. If present, extraction
   runs in an isolated virtualenv built from it rather than the shared cluster
