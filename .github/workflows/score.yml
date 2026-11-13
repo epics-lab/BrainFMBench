@@ -215,6 +215,11 @@ jobs:
 
           Mirror of the BrainFMBench leaderboard, rebuilt automatically from
           https://github.com/epics-lab/BrainFMBench on every update.
+
+          Paper: [MICCAI 2026 MedAGI workshop](https://papers.miccai.org/miccai-2026-sat/MedAGI_025.html)
+          · [Papers with Code](https://paperswithcode.co/paper/132944)
+          · [bioRxiv preprint](https://www.biorxiv.org/content/10.64898/2026.05.15.725427v4)
+          · [GitHub](https://github.com/epics-lab/BrainFMBench)
           MD
           python - <<'PY'
           import os
