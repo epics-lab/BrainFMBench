@@ -382,7 +382,9 @@ def make_overview(itable, probe, view, metric="main"):
     for (p, m, pp, ds), tasks in itable.items():
         if p != probe or not _in_view(pp, view):
             continue
-        col = f"{_ilabel(m)}<br><span style='font-size:10px;color:#777'>{OV_PREP.get(pp, pp)}</span>"
+        # model names wrap onto two lines, as in the boxplots, so neighbouring columns never overlap
+        name = DISPLAY_NAMES.get(m, m).replace("\n", "<br>")
+        col = f"{name}<br><span style='font-size:10px;color:#777'>{OV_PREP.get(pp, pp)}</span>"
         for t, _n, is_cls in OV_TASKS:
             r = tasks.get(t)
             k = (cls_m if is_cls else reg_m)[0]
@@ -456,7 +458,7 @@ def make_overview(itable, probe, view, metric="main"):
     fig.update_layout(
         xaxis=dict(side="top", tickangle=0, tickfont=dict(size=11), showgrid=False, zeroline=False),
         yaxis=dict(autorange="reversed", tickvals=ypos, ticktext=ylab, tickfont=dict(size=12), showgrid=False, zeroline=False),
-        height=int(36 * (y + 1)) + 90, width=96 * len(cols) + 200, margin=dict(l=10, r=10, t=60, b=10),
+        height=int(36 * (y + 1)) + 90, width=96 * len(cols) + 200, margin=dict(l=10, r=10, t=85, b=10),
         plot_bgcolor="white", paper_bgcolor="white")
     return fig
 
