@@ -2,6 +2,12 @@
 
 BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#versioning).
 
+## Unreleased
+
+- Overview heatmap: the best model in each row is boxed, every row shows its metric direction and number of subjects, and values get extra decimals when the best and runner up would otherwise print the same
+- Releases are quarterly; suggestions through a new issue form
+- Papers with Code page and paper links on the Hugging Face Space
+
 ## v2.2.0, 2026-11-11
 
 - Datasets: BHRC (Brazilian High Risk Cohort, 542 subjects) and CCNP (Chinese Color Nest Project, 178 subjects) from Reproducible Brain Charts, subjects passing RBC T1w QC, with raw, turboprep, turboprep-affine and CAT12 inputs. BHRC is longitudinal: the first session passing QC is used, with labels from that session
