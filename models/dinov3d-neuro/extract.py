@@ -14,34 +14,36 @@ import torch
 import torch.nn.functional as F
 
 DINOV3D_SRC = "/home/arelbaha/links/scratch/dinov3d_git"
-PATCH = 16
-DO_RESAMPLE = False
-
-def resample_1mm(t, zooms):
-    # Matches monai Spacingd(pixdim=1, mode="bilinear", padding_mode="border"):
-    in_shape = t.shape[2:]
-    out_shape = [int(np.floor((n - 1) * z + 1e-6)) + 1 for n, z in zip(in_shape, zooms)]
-    axes = [torch.arange(m, dtype=torch.float64) / z / (n - 1) * 2 - 1
-            for m, n, z in zip(out_shape, in_shape, zooms)]
-    gx, gy, gz = torch.meshgrid(*axes, indexing="ij")
-    grid = torch.stack([gz, gy, gx], dim=-1)[None].float()  # grid_sample wants (W, H, D) order
-    return F.grid_sample(t, grid, mode="bilinear", padding_mode="border", align_corners=True)
-
-
+CROP_MARGIN = 5     # voxels of background kept around the brain bounding box
+TARGET_SIZE = 256   # final cube side fed to the model (multiple of the 16-voxel patch)
 EPS = 1e-6
 
 
-def load_volume(path):
+def load_volume(path, margin=CROP_MARGIN, size=TARGET_SIZE):
     img = nib.load(path)
     assert np.allclose(img.header.get_zooms()[:3], 1.0, atol=1e-3), f"{path} is not 1mm isotropic"
     v = np.nan_to_num(img.get_fdata().astype(np.float32), nan=0.0)
+
+    # Z-score over brain voxels only; background becomes 0.
     brain = v > v.min() + EPS
-    v[~brain] = 0.0
+    assert brain.any(), f"{path} has no voxels above background"
     x = v[brain]
-    v[brain] = (x - x.mean()) / (x.std() + EPS)
-    pad = [(-n) % PATCH for n in v.shape]
-    v = np.pad(v, [(q // 2, q - q // 2) for q in pad])
-    return torch.from_numpy(v)[None, None]
+    out = np.zeros_like(v)
+    out[brain] = (x - x.mean()) / (x.std() + EPS)
+
+    # Crop to the brain's axis-aligned bounding box plus `margin` voxels per side.
+    # Zero-pad first so the margin is exact even when the brain touches the edge.
+    out = np.pad(out, margin)
+    idx = np.nonzero(np.pad(brain, margin))
+    out = out[tuple(slice(i.min() - margin, i.max() + margin + 1) for i in idx)]
+
+    # Pad (centered, with background) to a cube so the resize is isotropic.
+    side = max(out.shape)
+    out = np.pad(out, [((side - n) // 2, side - n - (side - n) // 2) for n in out.shape])
+
+    # Isotropic resample to size^3.
+    t = torch.from_numpy(out)[None, None]
+    return F.interpolate(t, size=(size,) * 3, mode="trilinear", align_corners=False)
 
 
 def extract(input_dir, output_csv, weights_dir):
