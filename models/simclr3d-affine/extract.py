@@ -1,7 +1,9 @@
 """3D-Neuro-SimCLR for BrainFMBench: ResNet-18 encoder, projector removed, 512 dimensions.
 
-Input preparation follows the extraction used for the MedAGI 2026 paper:
-transpose (x, y, z) -> (z, x, y), center crop to 150 x 192 x 192, z-score over the whole volume.
+Input preparation follows the reference preprocessing in the 3D-Neuro-SimCLR repo
+(datasets/t1_datasets.py): transpose (x, y, z) -> (z, y, x), fixed crop [10:160, 19:211, 1:]
+to 150 x 192 x 192, standardization within the TurboPrep brain mask with background set to 0.
+Requires mask.nii.gz next to normalized.nii.gz.
 Checkpoint: simclr_3d_brain_foundation.tar from https://github.com/emilykaczmarek/3D-Neuro-SimCLR
 """
 import os
@@ -13,7 +15,6 @@ import torch
 import torch.nn as nn
 
 BATCH = 8
-TARGET = (150, 192, 192)
 
 def _setup():
     # Same settings as the MedAGI 2026 extraction: deterministic, single threaded, CPU
@@ -42,10 +43,17 @@ def _subjects(input_dir, tag):
 
 
 def _prepare(path):
-    img = np.transpose(nib.load(path).get_fdata().astype(np.float32), (2, 0, 1))
-    starts = [(s - t) // 2 for s, t in zip(img.shape, TARGET)]
-    img = img[starts[0]:starts[0] + TARGET[0], starts[1]:starts[1] + TARGET[1], starts[2]:starts[2] + TARGET[2]]
-    img = (img - img.mean()) / (img.std() + 1e-6)
+    img = nib.load(path).get_fdata().astype(np.float32)
+    msk = nib.load(os.path.join(os.path.dirname(path), "mask.nii.gz")).get_fdata().astype(np.float32)
+    if img.shape != msk.shape:
+        raise ValueError(f"Shape mismatch: {path}: {img.shape} vs {msk.shape}")
+    img = np.transpose(img, (2, 1, 0))[10:160, 19:211, 1:]
+    msk = np.transpose(msk, (2, 1, 0))[10:160, 19:211, 1:]
+    img = img * msk
+    n = max(float(msk.sum()), 1.0)
+    mean = img.sum() / n
+    std = np.sqrt((img ** 2).sum() / n - mean ** 2 + 1e-12)
+    img = (img - mean) / std * msk
     return torch.from_numpy(img[None]).float()
 
 
