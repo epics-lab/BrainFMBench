@@ -2,12 +2,17 @@
 
 """Validate every models/*/model.yaml against the submission schema."""
 
+import re
 import sys
 from pathlib import Path
 import yaml
 
 REQUIRED = {"name": str, "authors": list, "preprocessing": str, "embedding_dim": int}
 ALLOWED_PREPROCESSING = {"turboprep", "turboprep-affine", "cat12", "freesurfer", "raw"}
+ALLOWED_DATASETS = {"NKI", "HBN", "PNC", "BHRC", "CCNP"}
+ALLOWED_TASKS = {"sex", "age", "bmi", "handedness", "p_factor", "p_factor_nonzero",
+                 "internalizing", "externalizing"}
+SLUG = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 
 def validate_one(path):
     try:
@@ -17,6 +22,18 @@ def validate_one(path):
     if not isinstance(data, dict):
         return [f"{path}: top level must be a mapping of fields"]
     errors = []
+    slug = path.parent.name
+    if not SLUG.match(slug):
+        errors.append(f"{path}: folder name '{slug}' must use only lowercase letters, "
+                      f"digits, '_' and '-', and start with a letter or digit")
+    for key, allowed in (("datasets", ALLOWED_DATASETS), ("tasks", ALLOWED_TASKS)):
+        vals = data.get(key, [])
+        if not isinstance(vals, list):
+            errors.append(f"{path}: '{key}' must be a list")
+            continue
+        bad = [v for v in vals if v not in allowed]
+        if bad:
+            errors.append(f"{path}: unknown {key} {bad}; allowed: {sorted(allowed)}")
     for field, expected in REQUIRED.items():
         if field not in data:
             errors.append(f"{path}: missing required field '{field}'")

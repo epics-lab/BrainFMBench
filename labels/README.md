@@ -29,9 +29,11 @@ If you use these labels, please cite RBC and the original studies:
   development and its associations with mental health. *Neuron* 113(22), 3758–3779 (2025).
   https://doi.org/10.1016/j.neuron.2025.08.026
 - Nooner, K. B. et al. The NKI-Rockland Sample. *Front. Neurosci.* 6, 152 (2012).
-- Salum, G. A. et al. High risk cohort study for psychiatric disorders in childhood: rationale, design, methods and preliminary results. *Int. J. Methods Psychiatr. Res.* 24, 58–73 (2015).
-- Liu, S. et al. Chinese Color Nest Project: an accelerated longitudinal brain-mind cohort. *Dev. Cogn. Neurosci.* 52, 101020 (2021).
   https://doi.org/10.3389/fnins.2012.00152
+- Salum, G. A. et al. High risk cohort study for psychiatric disorders in childhood: rationale, design, methods and preliminary results. *Int. J. Methods Psychiatr. Res.* 24, 58–73 (2015).
+  https://doi.org/10.1002/mpr.1459
+- Liu, S. et al. Chinese Color Nest Project: an accelerated longitudinal brain-mind cohort. *Dev. Cogn. Neurosci.* 52, 101020 (2021).
+  https://doi.org/10.1016/j.dcn.2021.101020
 - Alexander, L. M. et al. An open resource for transdiagnostic research in pediatric mental
   health and learning disorders. *Sci. Data* 4, 170181 (2017). https://doi.org/10.1038/sdata.2017.181
 - Satterthwaite, T. D. et al. Neuroimaging of the Philadelphia Neurodevelopmental Cohort.

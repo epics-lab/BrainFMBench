@@ -1,9 +1,11 @@
 # Contributing a model to BrainFMBench
 
-BrainFMBench evaluates **frozen features** from brain MRI models on
-neuroimaging datasets (NKI, HBN, PNC, BHRC, CCNP) across sex classification and age / BMI
-regression. You submit your model; we run feature extraction on our cluster
-against preprocessed data (turboprep), then score the returned features.
+BrainFMBench evaluates **frozen features** from brain MRI models on five
+Reproducible Brain Charts datasets (NKI, HBN, PNC, BHRC, CCNP) across eight tasks:
+sex, age, BMI, handedness, p factor, p factor nonzero, internalizing and
+externalizing. You submit your model; we run feature extraction on our cluster
+against preprocessed data (turboprep, turboprep-affine, CAT12 or raw), then score
+the returned features.
 
 ## What you submit
 
@@ -128,7 +130,7 @@ datasets, and rebuilt only when `requirements.txt` changes.
 ## What happens after you open the PR
 
 1. Automated validation checks your submission is well-formed (yaml parses,
-   `extract.py` defines `extract(...)`, weights URLs resolve). If you supplied
+   `extract.py` defines `extract(...)`, weights URLs are direct download links). If you supplied
    a `requirements.txt`, your `extract.py` is run against a synthetic volume
    inside an environment built from it.
 2. A maintainer reviews and merges.

@@ -7,6 +7,10 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - Overview heatmap: the best model in each row is boxed, every row shows its metric direction and number of subjects, and values get extra decimals when the best and runner up would otherwise print the same
 - Releases are quarterly; suggestions through a new issue form
 - Papers with Code page and paper links on the Hugging Face Space
+- Overview column labels wrap so long model names never overlap (#84)
+- SECURITY.md and ACCESSIBILITY.md
+- Contributor docs, PR template and example submission list all five datasets, eight tasks and four preprocessing options; validation checks model folder names, datasets and tasks
+- Citation DOIs for every source study in labels/README.md
 
 ## v2.2.0, 2026-11-11
 
