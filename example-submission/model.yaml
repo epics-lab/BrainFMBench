@@ -9,7 +9,15 @@ architecture: ResNet (example)
 datasets:
   - NKI
   - HBN
+  - PNC
+  - BHRC
+  - CCNP
 tasks:
   - sex
   - age
   - bmi
+  - handedness
+  - p_factor
+  - p_factor_nonzero
+  - internalizing
+  - externalizing

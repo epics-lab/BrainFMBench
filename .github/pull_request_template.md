@@ -12,7 +12,7 @@ See CONTRIBUTING.md for the full guide.
 - **Paper / preprint link:**
 - **Model card (e.g. Hugging Face):**
 - **Code repository:**
-- **Was the model designed or tuned on NKI or HBN?** <!-- yes/no; if yes, explain -->
+- **Was the model designed or tuned on any benchmark dataset (NKI, HBN, PNC, BHRC, CCNP)?** <!-- yes/no; if yes, explain -->
 
 ## What this PR adds
 
@@ -28,15 +28,15 @@ See CONTRIBUTING.md for the full guide.
 ## Checklist
 
 ### Files
-- [ ] Everything is under `models/<my-model>/`
+- [ ] Everything is under `models/<my-model>/`, where the folder name uses only lowercase letters, digits, `_` and `-`
 - [ ] `model.yaml` includes `name`, `authors`, `preprocessing`, `embedding_dim`, `datasets`, and `tasks`
 - [ ] `model.yaml` includes `paper`, `model_card` and `code` links where they exist
-- [ ] `preprocessing` is one of the supported options (`turboprep` by default; `cat12` if needed)
-- [ ] `datasets` and `tasks` list only supported values (datasets: `NKI`, `HBN`; tasks: `sex`, `age`, `bmi`)
+- [ ] `preprocessing` is one of the supported options: `turboprep` (default), `turboprep-affine`, `cat12` or `raw`
+- [ ] `datasets` and `tasks` list only supported values (datasets: `NKI`, `HBN`, `PNC`, `BHRC`, `CCNP`; tasks: `sex`, `age`, `bmi`, `handedness`, `p_factor`, `p_factor_nonzero`, `internalizing`, `externalizing`)
 
 ### For code submissions
 - [ ] `extract.py` defines `extract(input_dir, output_csv, weights_dir)` with exactly those three arguments
-- [ ] `extract.py` reads volumes from `<input_dir>/<subject_id>/normalized.nii.gz` and writes `subject_id,f0,...,fN` to `output_csv`
+- [ ] `extract.py` reads volumes from `<input_dir>/<subject_id>/` (`normalized.nii.gz` for turboprep, `mwp1.nii` for cat12, `T1w.nii.gz` for raw) and writes `subject_id,f0,...,fN` to `output_csv`
 - [ ] The number of feature columns matches `embedding_dim` in `model.yaml`
 - [ ] `weights.txt` lists direct-download URL(s) — HuggingFace (`/resolve/`), Zenodo, GitHub Releases, or an institutional raw link
 - [ ] Weight URLs are **not** Google Drive / Dropbox / `/blob/` viewer pages

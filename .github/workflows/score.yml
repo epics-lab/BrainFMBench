@@ -16,9 +16,7 @@ on:
         default: ""
 
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 
 concurrency:
   group: score
@@ -145,6 +143,8 @@ jobs:
 
   leaderboard:
     needs: [plan, score]
+    permissions:
+      contents: write
     # runs even when some score jobs failed or timed out: finished units are merged,
     # missing ones keep their previous results (see merge_results.py)
     if: ${{ always() && needs.plan.result == 'success' }}
@@ -247,6 +247,9 @@ jobs:
 
   deploy-pages:
     needs: leaderboard
+    permissions:
+      pages: write
+      id-token: write
     if: ${{ always() && needs.leaderboard.result == 'success' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment:

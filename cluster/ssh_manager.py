@@ -20,10 +20,8 @@ class ClusterSSH:
     def run(self, remote_cmd, check=True, capture=True):
         """Run a command on the automation node. Returns (rc, stdout, stderr).
 
-        The robot account is behind allowed_commands.sh, which rejects unknown
-        commands but still exits 0, so rejection must be detected from stdout.
-        That whitelist also expands $SSH_ORIGINAL_COMMAND unquoted, so ';',
-        '&&' and redirects are passed as literal arguments: one command only.
+        Rejected commands still exit 0, so rejection is detected from stdout.
+        Send one command per call.
         """
         cmd = ["ssh"] + self.ssh_opts + [self.host, remote_cmd]
         p = subprocess.run(cmd, capture_output=capture, text=True)
