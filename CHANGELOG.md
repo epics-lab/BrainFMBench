@@ -13,6 +13,7 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - Citation DOIs for every source study in labels/README.md
 - GitHub Actions updated to versions running on Node 24, clearing the Node 20 deprecation warning
 - Leaderboard shows every model on its own preprocessing by default, so models submitted only with affine registration, such as Neuro-JEPA-B, appear in the default view and the README figures; a Registration sensitivity checkbox swaps the models we also ran on the other turboprep registration
+- Overview columns are ordered only by rows where at least one model is clearly above chance, and the site opens on the linear probe, matching the README figure
 
 ## v2.2.0, 2026-11-11
 
