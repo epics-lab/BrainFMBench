@@ -3,9 +3,9 @@
 Downstream probing of frozen features with a linear and a RandomForest probe, held out test. The static figure shows the linear probe on rigid turboprep; the interactive site switches probe and preprocessing.
 Classification reports balanced accuracy and AUC; regression reports MAE and R². Arrows mark the better direction.
 
-[![BrainFMBench overview](leaderboard_overview.png?v=beb6e0dc)](https://www.epics-lab.ca/BrainFMBench/)
+[![BrainFMBench overview](leaderboard_overview.png?v=83067ba4)](https://www.epics-lab.ca/BrainFMBench/)
 
-[![Leaderboard boxplots](leaderboard_boxplots.png?v=a4c3275f)](https://www.epics-lab.ca/BrainFMBench/)
+[![Leaderboard boxplots](leaderboard_boxplots.png?v=ea045ddb)](https://www.epics-lab.ca/BrainFMBench/)
 
 _Boxes show 5-fold cross-validation across 5 seeds (25 values); overlaid points show held-out test results for the same 5 seeds._
 
@@ -64,6 +64,7 @@ _Bold: best per column within each probe._
 | Dinov3D-neuro | turboprep | 792 | [model card](https://huggingface.co/huggingbrain/Dinov3d-Neuro) |
 | FS Schaefer | FreeSurfer v6.0.1 (RBC): Schaefer 400 cortical thickness and surface area | 800 | [paper](https://papers.miccai.org/miccai-2026-sat/paper/MedAGI_025.pdf) |
 | FS aparc | FreeSurfer v6.0.1 (RBC): aparc 68 cortical thickness and surface area | 136 | [paper](https://papers.miccai.org/miccai-2026-sat/paper/MedAGI_025.pdf) |
+| Neuro-JEPA-B | turboprep with affine registration to MNI 1 mm | 768 | [paper](https://arxiv.org/abs/2606.14957) · [model card](https://huggingface.co/NYUMedML/Neuro-JEPA) · [code](https://github.com/NYUMedML/Neuro-JEPA) |
 | NiChart-Brain2Vec | Own pipeline: NiChart DLMUSE (DLICV skull stripping) + FSL FLIRT to the Brain2Vec template | 768 | [paper](https://arxiv.org/abs/2610.28411) · [model card](https://huggingface.co/cbica/Brain2Vec) · [code](https://github.com/CBICA/Brain2Vec) · [project](https://neuroimagingchart.com) |
 | SwinBrain | turboprep | 384 | [paper](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12155752/) · [code](https://github.com/MAI-Lab-West-China-Hospital/SwinBrain) |
 | un-CNN | turboprep | 9664 | [paper](https://www.biorxiv.org/content/10.64898/2026.06.07.730652v1) · [model card](https://huggingface.co/epics-lab/untrained-cnn) · [code](https://github.com/epics-lab/untrained-cnn) |
