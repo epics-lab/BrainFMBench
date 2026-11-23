@@ -12,6 +12,7 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 - Contributor docs, PR template and example submission list all five datasets, eight tasks and four preprocessing options; validation checks model folder names, datasets and tasks
 - Citation DOIs for every source study in labels/README.md
 - GitHub Actions updated to versions running on Node 24, clearing the Node 20 deprecation warning
+- Leaderboard shows every model on its own preprocessing by default, so models submitted only with affine registration, such as Neuro-JEPA-B, appear in the default view and the README figures; a Registration sensitivity checkbox swaps the models we also ran on the other turboprep registration
 
 ## v2.2.0, 2026-11-11
 

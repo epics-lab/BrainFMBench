@@ -322,13 +322,35 @@ def _box_stats(v):
     return q1, med, q3, v[v >= q1 - 1.5 * iqr].min(), v[v <= q3 + 1.5 * iqr].max()
 
 
-# the plot and table show one turboprep variant at a time; models with their own
-# preprocessing (CAT12 for AnatCL, FreeSurfer, raw for Brain2Vec) appear in every view
-VIEW_PREPS = [("turboprep", "turboprep (rigid)"), ("turboprep-affine", "turboprep-affine")]
+# Two views. "native": every model on its own preprocessing (rigid turboprep for models
+# submitted that way, affine for Neuro-JEPA, CAT12, FreeSurfer, raw). "alt": models that we
+# also ran on the other turboprep registration switch to it; everything else stays.
+VIEW_PREPS = [("native", "own preprocessing"), ("alt", "other turboprep registration")]
+TURBO = ("turboprep", "turboprep-affine")
+_NATIVE = {}
 
 
-def _in_view(prep, view):
-    return prep == view or prep not in dict(VIEW_PREPS)
+def _set_native(itable):
+    """model -> (native, alt) turboprep variant; rigid is native when a model has both."""
+    have = {}
+    for (_p, m, pp, _ds) in itable:
+        have.setdefault(m, set()).add(pp)
+    _NATIVE.clear()
+    for m, ps in have.items():
+        t = [x for x in TURBO if x in ps]
+        if t:
+            _NATIVE[m] = (t[0], t[-1])
+
+
+def _in_view(m, prep, view):
+    if prep not in TURBO:
+        return True
+    nat, alt = _NATIVE.get(m, (prep, prep))
+    return prep == (alt if view == "alt" else nat)
+
+
+def _modes(m, prep):
+    return [v for v, _ in VIEW_PREPS if _in_view(m, prep, v)]
 
 
 def _ilabel(m):
@@ -380,7 +402,7 @@ def make_overview(itable, probe, view, metric="main"):
     cls_m, reg_m = OV_METRICS[metric]
     val, sd, cols = {}, {}, []
     for (p, m, pp, ds), tasks in itable.items():
-        if p != probe or not _in_view(pp, view):
+        if p != probe or not _in_view(m, pp, view):
             continue
         # model names wrap onto two lines, as in the boxplots, so neighbouring columns never overlap
         name = DISPLAY_NAMES.get(m, m).replace("\n", "<br>")
@@ -474,11 +496,11 @@ def make_interactive(itable, out_html, extra_html=""):
     order, colors = _order_and_colors({(m, ds): v for (_p, m, _pp, ds), v in itable.items()})
     probes = [p for p, _ in PROBES if any(k[0] == p for k in itable)]
     preps = sorted({k[2] for k in itable})
-    views = [v for v, _ in VIEW_PREPS if any(k[2] == v for k in itable)] or [VIEW_PREPS[0][0]]
-    # affine is the default, toggled by a checkbox under the plot
-    default_view = "turboprep-affine" if "turboprep-affine" in views else views[0]
-    affine_models = [m for m in _order_and_colors({(m, ds): v for (_p, m, _pp, ds), v in itable.items()})[0]
-                     if any(k[1] == m and k[2] == "turboprep-affine" for k in itable)]
+    _set_native(itable)
+    # own preprocessing is the default; the checkbox swaps models that have both registrations
+    swap_models = [m for m in order if m in _NATIVE and _NATIVE[m][0] != _NATIVE[m][1]]
+    views = ["native", "alt"] if swap_models else ["native"]
+    default_view = "native"
     default_probe = "rf" if "rf" in probes else probes[0]
 
     ncol = len(DATASETS)
@@ -499,12 +521,12 @@ def make_interactive(itable, out_html, extra_html=""):
                         if not row or not row.get(box_key):
                             continue
                         lbl = _ilabel(m)
-                        vis = probe == default_probe and _in_view(pp, default_view)
+                        vis = probe == default_probe and _in_view(m, pp, default_view)
                         if vis:
                             default_cats.setdefault((r, c), []).append(lbl)
                         rgb = _mcolors.to_rgb(colors[m])
                         fill = "rgba(%d,%d,%d,0.55)" % tuple(int(255 * x) for x in rgb)
-                        tag = dict(probe=probe, prep=pp)
+                        tag = dict(probe=probe, prep=pp, modes=_modes(m, pp))
                         q1, med, q3, lo, hi = _box_stats(np.asarray(row[box_key], float))
                         show = vis and m not in in_legend
                         fig.add_trace(go.Box(
@@ -550,10 +572,10 @@ def make_interactive(itable, out_html, extra_html=""):
     try:
         static = go.Figure(fig)
         s_probe = "linear" if "linear" in probes else default_probe
-        s_view = "turboprep"
+        s_view = "native"
         cats, seen = {}, set()
         for t in static.data:
-            on = bool(t.meta) and t.meta["probe"] == s_probe and _in_view(t.meta["prep"], s_view)
+            on = bool(t.meta) and t.meta["probe"] == s_probe and s_view in t.meta["modes"]
             t.visible = on
             t.showlegend = bool(on and t.q1 is not None and t.name not in seen)
             if t.showlegend:
@@ -563,7 +585,7 @@ def make_interactive(itable, out_html, extra_html=""):
             if on and t.q1 is not None and t.x[0] not in cats[ax]:
                 cats[ax].append(t.x[0])
         static.update_layout({f"{ax}.categoryarray": v for ax, v in cats.items()})
-        static.update_layout(title_text=f"BrainFMBench leaderboard ({dict(PROBES)[s_probe]}, {dict(VIEW_PREPS)[s_view]})", width=1300)
+        static.update_layout(title_text=f"BrainFMBench leaderboard ({dict(PROBES)[s_probe]}, each model on its own preprocessing)", width=1300)
         static.write_image(os.path.join(REPO, "leaderboard_boxplots.png"), scale=2)
         print("wrote plotly png")
     except Exception as e:
@@ -577,9 +599,9 @@ def make_interactive(itable, out_html, extra_html=""):
                 if f_ is not None:
                     ov[f"{p_}|{v_}|{m_}"] = _json.loads(f_.to_json())
     try:
-        sf = make_overview(itable, "linear" if "linear" in probes else default_probe, "turboprep")
+        sf = make_overview(itable, "linear" if "linear" in probes else default_probe, "native")
         if sf is not None:
-            sf.update_layout(title=dict(text="BrainFMBench overview · linear probe · rigid turboprep · held out test", x=0.01), margin=dict(t=110))
+            sf.update_layout(title=dict(text="BrainFMBench overview · linear probe · own preprocessing · held out test", x=0.01), margin=dict(t=110))
             sf.write_image(os.path.join(REPO, "leaderboard_overview.png"), scale=2)
             print("wrote overview png")
     except Exception as e:
@@ -598,14 +620,13 @@ def make_interactive(itable, out_html, extra_html=""):
         '<div class="ctl"><label>Probe <select id="selProbe">'
         + "".join(opt(p, dict(PROBES)[p], p == default_probe) for p in probes)
         + "</select></label></div>")
-    names = ", ".join(_h.escape(DISPLAY_NAMES.get(m, m).replace("\n", " ")) for m in affine_models)
-    prep_ctl = "" if "turboprep-affine" not in views else (
-        '<div class="prepctl"><label><input type="checkbox" id="chkAffine"'
-        + (" checked" if default_view == "turboprep-affine" else "")
-        + '> <b>Affine registration</b> for turboprep models</label>'
-        + f'<div class="sub">Applies only to the models that take turboprep input ({names}): '
-        "checked shows turboprep with affine registration to MNI 1 mm, unchecked shows rigid turboprep. "
-        "AnatCL (CAT12), FreeSurfer and NiChart-Brain2Vec (raw) use their own preprocessing and do not change. "
+    names = ", ".join(_h.escape(DISPLAY_NAMES.get(m, m).replace("\n", " ")) for m in swap_models)
+    prep_ctl = "" if "alt" not in views else (
+        '<div class="prepctl"><label><input type="checkbox" id="chkAlt"'
+        '> <b>Registration sensitivity</b>: swap rigid and affine turboprep</label>'
+        '<div class="sub">Unchecked, every model uses its own preprocessing. Checked, the models we also ran '
+        f"on the other turboprep registration ({names}) switch from rigid to affine registration to MNI 1 mm. "
+        "Models with only one registration or their own pipeline (CAT12, FreeSurfer, raw) do not change. "
         "The table below follows the same setting.</div></div>")
     script = """<script>
 (function () {
@@ -614,11 +635,11 @@ def make_interactive(itable, out_html, extra_html=""):
   var OV = """ + _json.dumps(ov) + """;
   function apply() {
     var probe = document.getElementById('selProbe').value;
-    var chk = document.getElementById('chkAffine');
-    var prep = chk ? (chk.checked ? 'turboprep-affine' : 'turboprep') : VIEWS[0];
+    var chk = document.getElementById('chkAlt');
+    var prep = chk && chk.checked ? 'alt' : 'native';
     var vis = [], cats = {}, seen = {}, legend = [];
     gd.data.forEach(function (t) {
-      var on = t.meta && t.meta.probe === probe && (t.meta.prep === prep || VIEWS.indexOf(t.meta.prep) < 0);
+      var on = t.meta && t.meta.probe === probe && t.meta.modes.indexOf(prep) >= 0;
       vis.push(on);
       var ax = (t.xaxis || 'x').replace('x', 'xaxis');
       cats[ax] = cats[ax] || [];
@@ -638,7 +659,7 @@ def make_interactive(itable, out_html, extra_html=""):
       var pOk = tb.dataset.probe === probe, any = false;
       Array.from(tb.rows).forEach(function (r) {
         if (r.classList.contains('grp')) return;
-        var on = pOk && (r.dataset.prep === prep || VIEWS.indexOf(r.dataset.prep) < 0);
+        var on = pOk && r.dataset.modes.split(' ').indexOf(prep) >= 0;
         r.style.display = on ? '' : 'none'; any = any || on;
       });
       tb.style.display = any ? '' : 'none';
@@ -646,7 +667,7 @@ def make_interactive(itable, out_html, extra_html=""):
   }
   document.getElementById('selProbe').addEventListener('change', apply);
   var ms = document.getElementById('selMetric'); if (ms) ms.addEventListener('change', apply);
-  var chk = document.getElementById('chkAffine'); if (chk) chk.addEventListener('change', apply);
+  var chk = document.getElementById('chkAlt'); if (chk) chk.addEventListener('change', apply);
   if (window.Plotly && gd.data) apply(); else window.addEventListener('load', apply);
 })();
 </script>"""
@@ -821,7 +842,7 @@ def tables_html(ent, meta, present):
                 key = "" if mu is None else repr(mu)
                 cls = ' class="best"' if mu is not None and mu == best.get((probe,) + c) else ""
                 tds.append(f"<td data-v=\"{key}\"{cls}>{e(txt)}</td>")
-            out.append(f"<tr data-prep=\"{e(prep)}\"><td data-v=\"{e(m.lower())}\">{name}</td>"
+            out.append(f"<tr data-prep=\"{e(prep)}\" data-modes=\"{' '.join(_modes(m, prep))}\"><td data-v=\"{e(m.lower())}\">{name}</td>"
                        f"<td data-v=\"{e(prep)}\">{e(prep)}</td>{''.join(tds)}</tr>")
         out.append("</tbody>")
     out.append("</table>")
@@ -869,8 +890,11 @@ def main():
     for r in rows:
         prep = r.get("preprocessing", "turboprep")
         itable.setdefault((r.get("probe", "rf"), r["model"], prep, r["dataset"]), {})[r["task"]] = r
-        # the static figure shows the linear probe on each model's original (rigid) preprocessing
-        if r.get("probe", "rf") == "linear" and prep != "turboprep-affine":
+    _set_native(itable)
+    # the static figure shows the linear probe on each model's own preprocessing
+    for r in rows:
+        prep = r.get("preprocessing", "turboprep")
+        if r.get("probe", "rf") == "linear" and _in_view(r["model"], prep, "native"):
             table.setdefault((r["model"], r["dataset"]), {})[r["task"]] = r
 
     display = []
