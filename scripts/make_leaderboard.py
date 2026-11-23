@@ -433,16 +433,21 @@ def make_overview(itable, probe, view, metric="main"):
     M = np.array([[val.get((c, ds, t), nan) for c in cols] for ds, t, _ in rkey])
     SD = np.array([[sd.get((c, ds, t), nan) for c in cols] for ds, t, _ in rkey])
     S = np.zeros_like(M)
+    G = np.zeros_like(M)
     for i, (ds_, t_, mk) in enumerate(rkey):
         ch = _ov_chance(ds_, t_, mk)
         # MAE: lower is better, gain is the fraction of the mean predictor's error removed
         g = (ch - M[i]) / ch if mk == "test_mae" else M[i] - ch
+        G[i] = g
         best = np.nanmax(g)
         S[i] = np.clip(g / best, 0, None) if best > 0 else 0
         if best < 0.1:
             S[i] = S[i] * max(best, 0) / 0.1
         S[i][np.isnan(M[i])] = nan
-    order = np.argsort(-np.nanmean(np.where(np.isnan(S), 0, S), axis=0), kind="stable")
+    # column order: average only over rows where some model is clearly above chance (best gain of
+    # at least 0.1); rows where everyone is near chance do not decide the order
+    sig = [i for i in range(len(rkey)) if np.nanmax(G[i]) >= 0.1] or list(range(len(rkey)))
+    order = np.argsort(-np.nanmean(np.where(np.isnan(S[sig]), 0, S[sig]), axis=0), kind="stable")
     M, SD, S = M[:, order], SD[:, order], S[:, order]
     cols = [cols[j] for j in order]
     fig = go.Figure()
@@ -501,7 +506,7 @@ def make_interactive(itable, out_html, extra_html=""):
     swap_models = [m for m in order if m in _NATIVE and _NATIVE[m][0] != _NATIVE[m][1]]
     views = ["native", "alt"] if swap_models else ["native"]
     default_view = "native"
-    default_probe = "rf" if "rf" in probes else probes[0]
+    default_probe = "linear" if "linear" in probes else probes[0]
 
     ncol = len(DATASETS)
     fig = make_subplots(rows=len(BOX_ROWS), cols=ncol,
@@ -611,7 +616,7 @@ def make_interactive(itable, out_html, extra_html=""):
               + '</select></label></div><div class="sub">Held out test. Color: improvement over chance, relative to the best '
               'model in each row; pale rows are near chance. Arrows give the direction: ↑ higher is better, ↓ lower is better. Chance is 0.5 for balanced accuracy and AUC, 0 for R², and for '
               'MAE the error of predicting the training mean, so MAE color is the fraction of that error removed. Boxed: the best '
-              'model in each row. n is the number of subjects with that label. Hover for mean ± SD over 5 seeds.</div><div id="ovplot"></div>')
+              'model in each row. Columns are ordered by the average over rows where at least one model is clearly above chance; rows near chance for every model do not affect the order. n is the number of subjects with that label. Hover for mean ± SD over 5 seeds.</div><div id="ovplot"></div>')
     plot = fig.to_html(full_html=False, include_plotlyjs="cdn", div_id="lbplot",
                        config={"responsive": True, "displaylogo": False})
     import html as _h
