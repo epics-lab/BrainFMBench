@@ -25,7 +25,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-NEUROJEPA_SRC = os.environ.get("NEUROJEPA_SRC", "/path/to/Neuro-JEPA/src")
+NEUROJEPA_SRC = os.environ.get("NEUROJEPA_SRC", "/home/arelbaha/links/scratch/neurojepa_git/src")
 EMBED_DIM = 1024
 SEED = 0
 
