@@ -1,13 +1,20 @@
-[![Paper](https://img.shields.io/badge/Paper-MICCAI_2026_MedAGI-0b3d91?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](https://papers.miccai.org/miccai-2026-sat/paper/MedAGI_025.pdf)
-[![Leaderboard](https://img.shields.io/badge/Leaderboard-Live-2e8b57?style=for-the-badge)](https://www.epics-lab.ca/BrainFMBench/)
-[![Hugging Face Space](https://img.shields.io/badge/%F0%9F%A4%97_Hugging_Face-Space-ffcc4d?style=for-the-badge)](https://huggingface.co/spaces/epics-lab/BrainFMBench)
-[![Submissions](https://img.shields.io/badge/Submissions-Open-6a5acd?style=for-the-badge&logo=github&logoColor=white)](CONTRIBUTING.md)
-[![Scoring](https://img.shields.io/github/actions/workflow/status/epics-lab/BrainFMBench/score.yml?style=for-the-badge&label=Scoring&logo=githubactions&logoColor=white)](https://github.com/epics-lab/BrainFMBench/actions/workflows/score.yml)
+<h1 align="center">BrainFMBench</h1>
 
-# BrainFMBench
+<p align="center"><strong>A living benchmark for structural brain MRI foundation models</strong></p>
 
-A living benchmark for **structural brain MRI foundation models**. Every model runs as a frozen
-encoder on the same subjects from five [Reproducible Brain Charts](https://reprobrainchart.github.io) cohorts,
+<p align="center">
+  <a href="https://papers.miccai.org/miccai-2026-sat/paper/MedAGI_025.pdf"><img src="https://img.shields.io/badge/paper-MICCAI_2026_MedAGI-0b3d91?logo=adobeacrobatreader&logoColor=white" alt="Paper"></a>
+  <a href="https://www.epics-lab.ca/BrainFMBench/"><img src="https://img.shields.io/badge/leaderboard-live-2e8b57" alt="Leaderboard"></a>
+  <a href="https://huggingface.co/spaces/epics-lab/BrainFMBench"><img src="https://img.shields.io/badge/%F0%9F%A4%97_Hugging_Face-Space-ffcc4d" alt="Hugging Face Space"></a>
+  <a href="LEADERBOARD.md#models"><img src="https://img.shields.io/badge/%F0%9F%A7%A0_Models-12-e67e22" alt="Models"></a>
+  <a href="#scoring-protocol"><img src="https://img.shields.io/badge/probes-linear_%C2%B7_random_forest-34495e" alt="Probes"></a>
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/submissions-open-6a5acd?logo=github&logoColor=white" alt="Submissions open"></a>
+  <a href="https://github.com/epics-lab/BrainFMBench/actions/workflows/score.yml"><img src="https://img.shields.io/github/actions/workflow/status/epics-lab/BrainFMBench/score.yml?label=scoring&logo=githubactions&logoColor=white" alt="Scoring"></a>
+</p>
+
+---
+
+Every model runs as a frozen encoder on the same subjects from five [Reproducible Brain Charts](https://reprobrainchart.github.io) cohorts,
 and the same linear and random forest probes predict sex, age, BMI and mental health scores from its features.
 To add a model, open a pull request: see [CONTRIBUTING.md](CONTRIBUTING.md). The leaderboard updates automatically.
 
