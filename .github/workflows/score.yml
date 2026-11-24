@@ -211,6 +211,7 @@ jobs:
           pinned: true
           license: mit
           short_description: Living benchmark of structural MRI foundation models
+          MODELS_PLACEHOLDER
           ---
 
           Mirror of the BrainFMBench leaderboard, rebuilt automatically from
@@ -221,6 +222,20 @@ jobs:
           · [bioRxiv preprint](https://www.biorxiv.org/content/10.64898/2026.05.15.725427v4)
           · [GitHub](https://github.com/epics-lab/BrainFMBench)
           MD
+          # list every benchmarked model hosted on the Hub, so their pages show "Spaces using this model"
+          python - <<'PY'
+          import glob, re
+          ids = set()
+          for f in glob.glob("models/*/weights.txt") + glob.glob("models/*/model.yaml"):
+              for m in re.findall(r"huggingface\.co/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)", open(f).read()):
+                  if not m.startswith(("spaces/", "datasets/")):
+                      ids.add(m)
+          block = "".join(["models:\n"] + [f"  - {i}\n" for i in sorted(ids)]) if ids else ""
+          p = "/tmp/space/README.md"
+          s = open(p).read()
+          open(p, "w").write(s.replace("MODELS_PLACEHOLDER\n", block))
+          print(block)
+          PY
           python - <<'PY'
           import os
           from huggingface_hub import HfApi
