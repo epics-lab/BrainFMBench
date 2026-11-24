@@ -1,0 +1,35 @@
+name: Neuro-JEPA-L
+authors:
+  - Huang, H., et al.
+submitted_by: Huang, Haoxu
+description: Sparse latent predictive (V-JEPA style) 3D ViT-L with MoE, pretrained on ~1.55M clinical T1w/T2w/FLAIR scans; mean of final-layer tokens
+preprocessing: turboprep-affine
+preprocessing_label: "turboprep with affine registration to MNI 1 mm"
+embedding_dim: 1024
+architecture: 3D ViT-L, patch 12^3, 96x108x96 input, RoPE, sparse MoE in alternating blocks; mean over the 576 final-layer patch tokens
+citation: >-
+  Huang, H., et al. Learning Sparse Latent Predictive Foundation Model for
+  Multimodal Neuroimaging. arXiv:2606.14957 (2026).
+paper: https://arxiv.org/abs/2606.14957
+model_card: https://huggingface.co/NYUMedML/Neuro-JEPA-Large
+code: https://github.com/NYUMedML/Neuro-JEPA (commit 2df20d3)
+weights: https://huggingface.co/NYUMedML/Neuro-JEPA-Large
+cluster_only: true
+cpus: 4
+walltime: "12:00:00"
+note: Weights are gated on Hugging Face under CC BY-NC-ND 4.0 (non-commercial research use).
+datasets:
+  - NKI
+  - HBN
+  - PNC
+  - BHRC
+  - CCNP
+tasks:
+  - sex
+  - age
+  - bmi
+  - p_factor_nonzero
+  - p_factor
+  - internalizing
+  - externalizing
+  - handedness

@@ -1,0 +1,3 @@
+# Gated repo: requires an approved Hugging Face account/token (see PR for access).
+https://huggingface.co/NYUMedML/Neuro-JEPA-Large/resolve/main/config.json
+https://huggingface.co/NYUMedML/Neuro-JEPA-Large/resolve/main/model.safetensors
