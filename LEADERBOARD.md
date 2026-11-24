@@ -51,6 +51,7 @@ _Held out test, mean ± std over 5 seeds. There is no single overall score; sort
 _Bold: best per column within each probe._
 
 † **Neuro-JEPA-B:** Weights are gated on Hugging Face under CC BY-NC-ND 4.0 (non-commercial research use).
+† **Neuro-JEPA-L:** Weights are gated on Hugging Face under CC BY-NC-ND 4.0 (non-commercial research use).
 † **un-CNN:** Maintainers' own model.
 
 ### Models
