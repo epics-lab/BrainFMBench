@@ -4,6 +4,8 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 
 ## Unreleased
 
+- Models: Neuro-JEPA-B and Neuro-JEPA-L, submitted by their authors
+- README: shorter first screen with five badges, a three line summary and the overview figure; the full tables stay in LEADERBOARD.md
 - Overview heatmap: the best model in each row is boxed, every row shows its metric direction and number of subjects, and values get extra decimals when the best and runner up would otherwise print the same
 - Releases are quarterly; suggestions through a new issue form
 - Papers with Code page and paper links on the Hugging Face Space
