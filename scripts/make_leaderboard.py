@@ -966,10 +966,8 @@ def main():
                    else f"[![Leaderboard boxplots](leaderboard_boxplots.png?v={_png_v()})]({PAGES_URL})")
             blk += [img, "",
                     f"**[Interactive version]({PAGES_URL})**", ""]
-        blk += [f"_Held out test, mean ± std over 5 seeds. There is no single overall score; "
-                f"sort by task on the [interactive site]({PAGES_URL})._", ""]
-        blk += task_tables_md(ent, meta) + notes_md(meta)
-        blk += ["", "Model details, papers and model cards: [`LEADERBOARD.md`](LEADERBOARD.md#models).",
+        # keep the README first screen short: figure and links only; full tables live in LEADERBOARD.md
+        blk += [f"Full tables with every dataset, task and probe, plus model details: [`LEADERBOARD.md`](LEADERBOARD.md).",
                 "", "<!-- LEADERBOARD:END -->"]
         blk_text = "\n".join(blk)
         c = open(readme).read()
