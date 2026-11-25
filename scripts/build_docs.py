@@ -192,6 +192,108 @@ def social_card(src, out, line):
     card.save(out, optimize=True)
 
 
+# ---------------------------------------------------------------- paper tables
+TABLE_TASKS = [("sex", "Sex"), ("age", "Age"), ("bmi", "BMI")]
+
+
+def overall_order(native, probe):
+    """models in leaderboard order: mean relative gain over rows where some model is clearly above chance"""
+    sc = {}
+    for ds in L.DATASETS:
+        for t, _, _ in L.OV_TASKS:
+            d = native.get((probe, ds, t), {})
+            g = {m: gain(ds, t, v[0]) for m, v in d.items()}
+            g = {m: x for m, x in g.items() if x is not None}
+            if not g or max(g.values()) < 0.1:
+                continue
+            best = max(g.values())
+            for m, x in g.items():
+                sc.setdefault(m, []).append(max(x / best, 0))
+    return sorted(sc, key=lambda m: -sum(sc[m]) / len(sc[m]))
+
+
+def _tex(s):
+    for a, b in (("\\", "\\textbackslash{}"), ("&", "\\&"), ("%", "\\%"), ("_", "\\_"), ("#", "\\#")):
+        s = s.replace(a, b)
+    return s
+
+
+def latex_table(native, probe, highlight=None):
+    """booktabs table: every model on sex, age and BMI in all five cohorts; the highlighted model goes last, as in a paper"""
+    plabel = {"linear": "linear probe", "rf": "random forest probe"}[probe]
+    order = overall_order(native, probe)
+    fs = [m for m in order if m.startswith("FS ")]
+    fm = [m for m in order if m not in fs and m != highlight]
+    blocks = [fm, [m for m in fs if m != highlight]] + ([[highlight]] if highlight else [])
+    cols = [(ds, t) for ds in L.DATASETS for t, _ in TABLE_TASKS]
+    flat = {c for c in cols if not ranked(native, probe, *c)[2]}
+    best = {}
+    for ds, t in cols:
+        d = native.get((probe, ds, t), {})
+        vals = sorted({round(v[0], 3 if IS_CLS[t] else 2) for v in d.values()}, reverse=IS_CLS[t])
+        best[(ds, t)] = vals[:2]
+
+    def cell(m, ds, t):
+        v = native.get((probe, ds, t), {}).get(m)
+        if v is None:
+            return "--"
+        r = round(v[0], 3 if IS_CLS[t] else 2)
+        txt = f"{r:.3f}" if IS_CLS[t] else f"{r:.2f}"
+        b = best[(ds, t)]
+        if r == b[0]:
+            return f"\\textbf{{{txt}}}"
+        if len(b) > 1 and r == b[1]:
+            return f"\\underline{{{txt}}}"
+        return txt
+
+    today = datetime.date.today()
+    n = len(L.DATASETS)
+    out = [f"% BrainFMBench comparison, {plabel}, generated {today.isoformat()} from {SITE}",
+           "% Needs \\usepackage{booktabs} and \\usepackage{graphicx}",
+           "\\begin{table*}[t]", "\\centering",
+           f"\\caption{{Comparison on BrainFMBench~\\cite{{encin2026comparative}}, {plabel} on frozen features. "
+           "Held out test mean over 5 seeds, each model on its own preprocessing. "
+           "Sex: balanced accuracy ($\\uparrow$); age: mean absolute error in years ($\\downarrow$); "
+           "BMI: mean absolute error ($\\downarrow$). Best in bold, second underlined. "
+           f"Results as of {today.strftime('%B %-d, %Y')}."
+           + (" $^\\dagger$Every model is near chance." if flat else "") + "}",
+           "\\label{tab:brainfmbench}",
+           "\\resizebox{\\textwidth}{!}{%",
+           "\\begin{tabular}{l" + " ccc" * n + "}", "\\toprule",
+           " & " + " & ".join(f"\\multicolumn{{3}}{{c}}{{{ds}}}" for ds in L.DATASETS) + " \\\\",
+           " ".join(f"\\cmidrule(lr){{{2 + 3 * i}-{4 + 3 * i}}}" for i in range(n)),
+           "Model & " + " & ".join(lab + ("$^\\dagger$" if (ds, t) in flat else "")
+                                   for ds in L.DATASETS for t, lab in TABLE_TASKS) + " \\\\"]
+    for blk in blocks:
+        if not blk:
+            continue
+        out.append("\\midrule")
+        for m in blk:
+            out.append(_tex(m) + " & " + " & ".join(cell(m, ds, t) for ds, t in cols) + " \\\\")
+    out += ["\\bottomrule", "\\end{tabular}}", "\\end{table*}", ""]
+    return "\n".join(out)
+
+
+def bibtex():
+    """the citation block from the README, so the docs never drift from it"""
+    txt = open(os.path.join(REPO, "README.md")).read()
+    m = re.search(r"```bibtex\n(.*?)```", txt, re.S)
+    return m.group(1).strip() if m else ""
+
+
+def paper_section(name, slug, native):
+    lines = ["## Use in your paper", "",
+             f"A ready to paste LaTeX table comparing {name} with every model on BrainFMBench, with {name} in the last row. "
+             "It needs `booktabs` and `graphicx`. Numbers are a snapshot of today's leaderboard; please cite BrainFMBench when you use them.", ""]
+    for probe, plabel in (("linear", "Linear probe"), ("rf", "Random forest")):
+        tex = latex_table(native, probe, highlight=name)
+        write(f"assets/tables/{slug}_{probe}.tex", tex)
+        lines += [f'=== "{plabel}"', "", "    ```latex"] + ["    " + ln for ln in tex.rstrip().splitlines()] + ["    ```", "",
+                  f"    [:material-download: Download {slug}_{probe}.tex](../assets/tables/{slug}_{probe}.tex){{ .md-button download }}", ""]
+    lines += ["```bibtex", bibtex(), "```", ""]
+    return lines
+
+
 # ---------------------------------------------------------------- pages
 def page_model(name, e, native, allprep):
     preps = list(e["folders"])
@@ -243,6 +345,7 @@ def page_model(name, e, native, allprep):
                 if a and b:
                     lines.append(f"| {ds} | {tname} | {fmt(t, a)} | {fmt(t, b)} |")
         lines.append("")
+    lines += paper_section(name, folder, native)
     return "\n".join(lines)
 
 
