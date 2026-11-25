@@ -1,5 +1,8 @@
 site_name: BrainFMBench
-site_description: A living benchmark for structural brain MRI foundation models
+site_description: >-
+  BrainFMBench is an open, living benchmark of frozen structural brain MRI foundation models.
+  Every model is probed with the same linear and random forest probes on open Reproducible Brain Charts
+  cohorts for sex, age, BMI and mental health, next to FreeSurfer and untrained baselines.
 site_url: https://www.epics-lab.ca/BrainFMBench/docs/
 repo_url: https://github.com/epics-lab/BrainFMBench
 repo_name: epics-lab/BrainFMBench
@@ -10,6 +13,7 @@ copyright: Code MIT · labels CC BY-NC-SA 4.0 · EPICS Lab, Krembil Centre for N
 
 theme:
   name: material
+  custom_dir: overrides
   favicon: assets/favicon.svg
   font:
     text: Inter

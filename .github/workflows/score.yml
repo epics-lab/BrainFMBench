@@ -3,7 +3,7 @@ name: score
 on:
   push:
     branches: [main]
-    paths: ["models/**", "labels/**", "eval/**", "scripts/**", "docs/**", "mkdocs.yml"]
+    paths: ["models/**", "labels/**", "eval/**", "scripts/**", "docs/**", "overrides/**", "mkdocs.yml"]
   workflow_dispatch:
     inputs:
       rescore_all:

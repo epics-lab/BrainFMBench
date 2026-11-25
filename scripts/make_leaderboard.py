@@ -314,6 +314,54 @@ def make_boxplots(table, out_png):
 
 PAGES_URL = "https://www.epics-lab.ca/BrainFMBench/"
 
+SITE_DESCRIPTION = ("BrainFMBench is an open, living benchmark of frozen structural brain MRI foundation models. "
+                    "Every model is probed with the same linear and random forest probes on open Reproducible Brain Charts "
+                    "cohorts for sex, age, BMI and mental health, next to FreeSurfer and untrained baselines.")
+SOCIAL_IMAGE = "https://www.epics-lab.ca/BrainFMBench/docs/assets/social.png"
+
+
+def jsonld(date_modified):
+    """schema.org Dataset record, so the benchmark shows up in Google Dataset Search."""
+    return json.dumps({
+        "@context": "https://schema.org", "@type": "Dataset",
+        "name": "BrainFMBench",
+        "alternateName": "BrainFMBench: a living benchmark for brain structural MRI foundation models",
+        "description": SITE_DESCRIPTION,
+        "url": PAGES_URL,
+        "sameAs": ["https://github.com/epics-lab/BrainFMBench",
+                   "https://huggingface.co/spaces/epics-lab/BrainFMBench",
+                   "https://www.epics-lab.ca/BrainFMBench/docs/"],
+        "keywords": ["brain MRI", "foundation models", "benchmark", "leaderboard", "neuroimaging",
+                     "structural MRI", "T1-weighted", "self-supervised learning", "brain age"],
+        "license": "https://github.com/epics-lab/BrainFMBench/blob/main/LICENSE",
+        "isAccessibleForFree": True,
+        "creator": {"@type": "Organization", "name": "EPICS Lab", "url": "https://www.epics-lab.ca"},
+        "citation": "Encin, A., Gilmore, A., Rokem, A., Dickie, E., Glatard, T. A Comparative Evaluation of Structural "
+                    "MRI Foundation Models for Age, Sex, and Body-Mass Index Predictions. MICCAI 2026 MedAGI workshop.",
+        "isBasedOn": "https://reprobrainchart.github.io/",
+        "measurementTechnique": "Structural T1-weighted MRI",
+        "variableMeasured": ["sex", "age", "body mass index", "p factor", "internalizing",
+                             "externalizing", "handedness"],
+        "distribution": [{"@type": "DataDownload", "encodingFormat": "text/markdown",
+                          "contentUrl": "https://raw.githubusercontent.com/epics-lab/BrainFMBench/main/LEADERBOARD.md"}],
+        "dateModified": date_modified,
+    }, ensure_ascii=False).replace("</", "<\\/")
+
+
+def seo_head(title, url):
+    """meta description, canonical link, link preview tags and the Dataset record"""
+    import datetime
+    from html import escape as e
+    d = e(SITE_DESCRIPTION)
+    return (f'<meta name="description" content="{d}">'
+            f'<link rel="canonical" href="{e(url)}">'
+            f'<meta property="og:type" content="website"><meta property="og:site_name" content="BrainFMBench">'
+            f'<meta property="og:title" content="{e(title)}"><meta property="og:description" content="{d}">'
+            f'<meta property="og:url" content="{e(url)}"><meta property="og:image" content="{SOCIAL_IMAGE}">'
+            f'<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="{SOCIAL_IMAGE}">'
+            f'<script type="application/ld+json">{jsonld(datetime.date.today().isoformat())}</script>')
+
+
 
 def _box_stats(v):
     # same quartiles and 1.5 IQR whiskers as matplotlib's boxplot
@@ -681,7 +729,8 @@ def make_interactive(itable, out_html, extra_html=""):
         f.write(
             "<!doctype html>\n<html lang=\"en\"><head><meta charset=\"utf-8\">"
             "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
-            "<title>BrainFMBench Leaderboard</title>"
+            "<title>BrainFMBench Leaderboard: brain MRI foundation models</title>"
+            + seo_head("BrainFMBench Leaderboard: brain MRI foundation models", PAGES_URL) +
             "<style>body{font-family:system-ui,sans-serif;max-width:1400px;margin:0 auto;padding:16px;color:#222}table{border-collapse:collapse;margin:8px 0 20px;font-size:14px}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}th{background:#f4f6f8}tr:nth-child(even) td{background:#fafbfc}.sub{color:#666;font-weight:normal;font-size:0.9em}.note{max-width:900px;color:#444}th.on{background:#e3e9f0}.arr{color:#889;font-size:0.85em;margin-left:4px}th.on .arr{color:#1a5fb4}th[data-col]:hover{background:#eaeef3}tr.grp th{background:#e8edf2;text-align:left;font-size:13px;letter-spacing:.02em}th.ds{text-align:center}td.best{font-weight:600}"
             ".ctl{position:sticky;top:0;z-index:5;background:#fff;padding:8px 0;border-bottom:1px solid #eee;display:flex;gap:18px;flex-wrap:wrap}.ctl select{font-size:14px;padding:3px 6px;margin-left:6px}"
             ".prepctl{margin:4px 0 18px;padding:10px 14px;border:1px solid #dde3ea;border-radius:6px;background:#f7f9fb;max-width:900px}.prepctl label{font-size:15px;cursor:pointer}.prepctl .sub{margin-top:4px}</style>"

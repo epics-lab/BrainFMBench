@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block htmltitle %}
+  {% if page and page.is_homepage %}
+    <title>BrainFMBench: a living benchmark of brain MRI foundation models</title>
+  {% else %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+{% if page %}
+  {% set title = (page.title ~ " · BrainFMBench") if page.title and not page.is_homepage else "BrainFMBench: a living benchmark of brain MRI foundation models" %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BrainFMBench">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ page.meta.description or config.site_description }}">
+  <meta property="og:url" content="{{ page.canonical_url }}">
+  <meta property="og:image" content="{{ config.site_url }}assets/social.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{{ config.site_url }}assets/social.png">
+  {% if page.is_homepage and config.extra.jsonld %}
+  <script type="application/ld+json">{{ config.extra.jsonld }}</script>
+  {% endif %}
+{% endif %}
+{% endblock %}

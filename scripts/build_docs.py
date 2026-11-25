@@ -10,6 +10,7 @@ Writes mkdocs.gen.yml with the generated pages in the navigation. Then run:
 import csv
 import datetime
 import glob
+import json
 import os
 import re
 import shutil
@@ -168,6 +169,29 @@ def age_plot(ds, ages, path):
     plt.close(fig)
 
 
+def social_card(src, out, line):
+    """1200x630 link preview: title band over the top of the overview heatmap"""
+    from PIL import Image, ImageDraw, ImageFont
+    import matplotlib.font_manager as fm
+    if not os.path.isfile(src):
+        return
+    im = Image.open(src).convert("RGB")
+    W, H = im.size
+    heat = im.crop((0, int(H * 0.038), W, int(H * 0.25)))
+    card = Image.new("RGB", (1200, 630), "#1f4e3d")
+    d = ImageDraw.Draw(card)
+    bold = fm.findfont(fm.FontProperties(family="DejaVu Sans", weight="bold"))
+    reg = fm.findfont(fm.FontProperties(family="DejaVu Sans"))
+    d.text((56, 44), "BrainFMBench", font=ImageFont.truetype(bold, 64), fill="white")
+    d.text((58, 124), "Living benchmark of brain MRI foundation models", font=ImageFont.truetype(reg, 30), fill="#bfd9cf")
+    d.text((58, 170), line, font=ImageFont.truetype(reg, 24), fill="#f2c14e")
+    panel = Image.new("RGB", (1200, 400), "white")
+    h = min(400, int(heat.height * 1160 / heat.width))
+    panel.paste(heat.resize((1160, h), Image.LANCZOS), (20, (400 - h) // 2))
+    card.paste(panel, (0, 230))
+    card.save(out, optimize=True)
+
+
 # ---------------------------------------------------------------- pages
 def page_model(name, e, native, allprep):
     preps = list(e["folders"])
@@ -175,7 +199,8 @@ def page_model(name, e, native, allprep):
     meta = e["metas"][nat]
     folder = e["folders"][nat]
     links = " ".join(f"[{lab}]({url}){{ .md-button }}" for lab, url in L._links(meta))
-    lines = [f"# {name}", "", " ".join(chip(p) for p in [nat] + [p for p in preps if p != nat]), ""]
+    desc = f"{name} on BrainFMBench: frozen embedding scores and ranks for sex, age, BMI and mental health on five open brain MRI cohorts."
+    lines = ["---", f"description: {json.dumps(desc)}", "---", "", f"# {name}", "", " ".join(chip(p) for p in [nat] + [p for p in preps if p != nat]), ""]
     if meta.get("description"):
         lines += [f"**{meta['description']}**", ""]
     if links:
@@ -251,7 +276,8 @@ def page_models_index(models, native):
 def page_dataset(ds, info, native, img_rel):
     m = DATASETS[ds]
     ages = info["ages"]
-    lines = [f"# {ds}: {m['full']}", "",
+    desc = f"{ds}, the {m['full']}, on BrainFMBench: subjects, ages, labels and the top brain MRI foundation models per task."
+    lines = ["---", f"description: {json.dumps(desc)}", "---", "", f"# {ds}: {m['full']}", "",
              f"[Dataset page on Reproducible Brain Charts :material-open-in-new:]({RBC}{m['rbc']}){{ .md-button }}", ""]
     if m["note"]:
         lines += [m["note"], ""]
@@ -406,7 +432,12 @@ def main():
     cl = cl.replace("(CONTRIBUTING.md#versioning)", "(protocol.md#versioning)")
     write("releases.md", cl)
 
+    n_fm = sum(1 for m in models if not m.startswith("FS "))
+    social_card(os.path.join(REPO, "leaderboard_overview.png"), os.path.join(OUT, "assets", "social.png"),
+                f"{n_fm} foundation models · {len(infos)} open cohorts · {sum(i['n'] for i in infos.values()):,} subjects · {len(L.OV_TASKS)} tasks")
+
     cfg = open(os.path.join(REPO, "mkdocs.yml")).read()
+    cfg = cfg.replace("\nextra:\n", "\nextra:\n  jsonld: " + json.dumps(L.jsonld(datetime.date.today().isoformat())) + "\n", 1)
     mnav = "".join(f"      - {n}: models/{models[n]['slug']}.md\n"
                    for n in sorted(models, key=lambda n: (n.startswith("FS "), n.lower())))
     dnav = "".join(f"      - {ds}: datasets/{ds.lower()}.md\n" for ds in DATASETS)
