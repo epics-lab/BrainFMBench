@@ -317,6 +317,27 @@ PAGES_URL = "https://www.epics-lab.ca/BrainFMBench/"
 SITE_DESCRIPTION = ("BrainFMBench is an open, living benchmark of frozen structural brain MRI foundation models. "
                     "Every model is probed with the same linear and random forest probes on open Reproducible Brain Charts "
                     "cohorts for sex, age, BMI and mental health, next to FreeSurfer and untrained baselines.")
+DOCS_URL = "https://www.epics-lab.ca/BrainFMBench/docs/"
+
+
+def _model_pages():
+    """(display name, docs page folder) per model, foundation models first; the page is the model's own preprocessing"""
+    import yaml
+    by = {}
+    for y in sorted(glob.glob(os.path.join(REPO, "models", "*", "model.yaml"))):
+        d = os.path.dirname(y)
+        if not os.path.isfile(os.path.join(d, "results.json")):
+            continue
+        m = yaml.safe_load(open(y)) or {}
+        name = m.get("name") or os.path.basename(d)
+        by.setdefault(name, {})[m.get("preprocessing", "turboprep")] = os.path.basename(d)
+    out = []
+    for name, preps in by.items():
+        nat = _NATIVE.get(name, (None,))[0] if name in _NATIVE else None
+        out.append((name, preps.get(nat) or preps[sorted(preps)[0]]))
+    return sorted(out, key=lambda x: (x[0].startswith("FS "), x[0].lower()))
+
+
 SOCIAL_IMAGE = "https://www.epics-lab.ca/BrainFMBench/docs/assets/social.png"
 
 
@@ -1016,6 +1037,8 @@ def main():
                    else f"[![Leaderboard boxplots](leaderboard_boxplots.png?v={_png_v()})]({PAGES_URL})")
             blk += [img, "",
                     f"**[Interactive version]({PAGES_URL})**", ""]
+        # name every model in plain text, so searches for a model name find the benchmark
+        blk += ["**Models:** " + " · ".join(f"[{n}]({DOCS_URL}models/{f}/)" for n, f in _model_pages()), ""]
         # keep the README first screen short: figure and links only; full tables live in LEADERBOARD.md
         blk += [f"Full tables with every dataset, task and probe, plus model details: [`LEADERBOARD.md`](LEADERBOARD.md).",
                 "", "<!-- LEADERBOARD:END -->"]

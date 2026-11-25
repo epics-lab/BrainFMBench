@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Submit a model
+    url: https://www.epics-lab.ca/BrainFMBench/docs/submit/
+    about: Five steps from fork to pull request. Extraction runs on our cluster.
+  - name: Leaderboard
+    url: https://www.epics-lab.ca/BrainFMBench/
+    about: Interactive results for every model, dataset, task and probe.
+  - name: Docs and catalog
+    url: https://www.epics-lab.ca/BrainFMBench/docs/
+    about: Model and dataset pages, protocol and release notes.
