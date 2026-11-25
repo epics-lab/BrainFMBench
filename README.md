@@ -56,7 +56,7 @@ initiative:
 - **NKI** — Nathan Kline Institute Rockland Sample (958 subjects)
 - **HBN** — Healthy Brain Network (997 subjects)
 - **PNC** — Philadelphia Neurodevelopmental Cohort (1439 subjects)
-- **BHRC** — Brazilian High Risk Cohort (542 subjects)
+- **BHRC** — Brazil High Risk Cohort (542 subjects)
 - **CCNP** — Chinese Color Nest Project (178 subjects)
 
 Labels are derived from RBC and distributed under CC BY-NC-SA 4.0; see [labels/README.md](labels/README.md).

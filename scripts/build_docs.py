@@ -29,11 +29,11 @@ GH = "https://github.com/epics-lab/BrainFMBench"
 SITE = L.PAGES_URL
 
 RBC = "https://reprobrainchart.github.io/docs/datasets/"
-# names and citations as given on each dataset's Reproducible Brain Charts page
+# names as given on each dataset's Reproducible Brain Charts page; citations match labels/README.md
 DATASETS = {
     "NKI": dict(full="Rockland Sample", rbc="NKI",
-                cite="Tobe, R. H. et al. A longitudinal resource for studying connectome development and its psychiatric associations during childhood. *Sci. Data* (2022).",
-                doi="https://doi.org/10.1038/s41597-022-01329-y",
+                cite="Nooner, K. B. et al. The NKI-Rockland Sample: a model for accelerating the pace of discovery science in psychiatry. *Front. Neurosci.* 6, 152 (2012).",
+                doi="https://doi.org/10.3389/fnins.2012.00152",
                 note="The only cohort here with adults. Mental health scores exist for 139 children only."),
     "HBN": dict(full="Healthy Brain Network", rbc="HBN",
                 cite="Alexander, L. M. et al. An open resource for transdiagnostic research in pediatric mental health and learning disorders. *Sci. Data* 4, 170181 (2017).",

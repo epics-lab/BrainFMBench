@@ -11,7 +11,7 @@ therefore distributed under CC BY-NC-SA 4.0, not under the repository's MIT lice
 | `NKI.csv` | NKI Rockland Sample | sex, age, bmi, p_factor, internalizing, externalizing, handedness |
 | `HBN.csv` | Healthy Brain Network | sex, age, bmi, p_factor, internalizing, externalizing, handedness |
 | `PNC.csv` | Philadelphia Neurodevelopmental Cohort | sex, age, bmi, p_factor_nonzero, p_factor, internalizing, externalizing, handedness |
-| `BHRC.csv` | Brazilian High Risk Cohort | sex, age, bmi, p_factor, internalizing, externalizing |
+| `BHRC.csv` | Brazil High Risk Cohort | sex, age, bmi, p_factor, internalizing, externalizing |
 | `CCNP.csv` | Chinese Color Nest Project | sex, age, bmi, p_factor, internalizing, externalizing |
 
 `sex` is 1 for female and 0 for male. `p_factor_nonzero` is 1 when RBC's harmonized p factor
