@@ -31,6 +31,8 @@ Paper: [MICCAI 2026 MedAGI workshop](https://papers.miccai.org/miccai-2026-sat/p
 
 **Models:** [3D-Neuro-SimCLR](https://www.epics-lab.ca/BrainFMBench/docs/models/simclr3d/) · [AnatCL (Global)](https://www.epics-lab.ca/BrainFMBench/docs/models/anatcl_global/) · [AnatCL (Local)](https://www.epics-lab.ca/BrainFMBench/docs/models/anatcl_local/) · [BrainIAC](https://www.epics-lab.ca/BrainFMBench/docs/models/brainiac/) · [Dinov3D-neuro](https://www.epics-lab.ca/BrainFMBench/docs/models/dinov3d-neuro/) · [Neuro-JEPA-B](https://www.epics-lab.ca/BrainFMBench/docs/models/neuro-jepa/) · [Neuro-JEPA-L](https://www.epics-lab.ca/BrainFMBench/docs/models/neuro-jepa-large/) · [NiChart-Brain2Vec](https://www.epics-lab.ca/BrainFMBench/docs/models/brain2vec/) · [SwinBrain](https://www.epics-lab.ca/BrainFMBench/docs/models/swinbrain/) · [un-CNN](https://www.epics-lab.ca/BrainFMBench/docs/models/uncnn/) · [FS aparc](https://www.epics-lab.ca/BrainFMBench/docs/models/fs_aparc/) · [FS Schaefer](https://www.epics-lab.ca/BrainFMBench/docs/models/fs_schaefer/)
 
+**Paper ready LaTeX table** of every model: [use in your paper](https://www.epics-lab.ca/BrainFMBench/docs/results/#use-in-your-paper)
+
 Full tables with every dataset, task and probe, plus model details: [`LEADERBOARD.md`](LEADERBOARD.md).
 
 <!-- LEADERBOARD:END -->
