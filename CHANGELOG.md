@@ -4,7 +4,7 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 
 ## Unreleased
 
-- Docs: every model page offers a ready to paste LaTeX comparison table against all models, for the linear and random forest probes
+- Docs: every model page offers a ready to paste LaTeX comparison table against all models, for the linear and random forest probes; the leaderboard page has the same table for all models, linked from the README
 - README names every model on the leaderboard with a link to its docs page; the new issue page links to the submission guide, leaderboard and docs
 - Search and sharing: page descriptions, a link preview image, canonical links, and a schema.org Dataset record so the benchmark is listed in Google Dataset Search
 - Docs site at /docs: a catalog page for every model and dataset, the protocol, a submission quickstart and the release notes, rebuilt from the repository on every leaderboard update

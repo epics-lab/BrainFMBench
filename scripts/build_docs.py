@@ -282,9 +282,12 @@ def bibtex():
 
 
 def paper_section(name, slug, native):
+    """name None gives the table of every model in leaderboard order, for the leaderboard page"""
+    intro = (f"A ready to paste LaTeX table comparing {name} with every model on BrainFMBench, with {name} in the last row. " if name else
+             "A ready to paste LaTeX table of every model on BrainFMBench, in leaderboard order. "
+             "Each model page has a version with that model in the last row. ")
     lines = ["## Use in your paper", "",
-             f"A ready to paste LaTeX table comparing {name} with every model on BrainFMBench, with {name} in the last row. "
-             "It needs `booktabs` and `graphicx`. Numbers are a snapshot of today's leaderboard; please cite BrainFMBench when you use them.", ""]
+             intro + "It needs `booktabs` and `graphicx`. Numbers are a snapshot of today's leaderboard; please cite BrainFMBench when you use them.", ""]
     for probe, plabel in (("linear", "Linear probe"), ("rf", "Random forest")):
         tex = latex_table(native, probe, highlight=name)
         write(f"assets/tables/{slug}_{probe}.tex", tex)
@@ -446,6 +449,7 @@ def page_results(native):
     lines += ["", "## Distributions", "",
               "Boxes are 5 fold cross validation over 5 seeds, points are the held out results.", "",
               "![Boxplots](../assets/fig/leaderboard_boxplots.png){ .bfb-fig }", ""]
+    lines += paper_section(None, "all", native)
     return "\n".join(lines)
 
 

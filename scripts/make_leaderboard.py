@@ -1038,7 +1038,8 @@ def main():
             blk += [img, "",
                     f"**[Interactive version]({PAGES_URL})**", ""]
         # name every model in plain text, so searches for a model name find the benchmark
-        blk += ["**Models:** " + " · ".join(f"[{n}]({DOCS_URL}models/{f}/)" for n, f in _model_pages()), ""]
+        blk += ["**Models:** " + " · ".join(f"[{n}]({DOCS_URL}models/{f}/)" for n, f in _model_pages()), "",
+                f"**Paper ready LaTeX table** of every model: [use in your paper]({DOCS_URL}results/#use-in-your-paper)", ""]
         # keep the README first screen short: figure and links only; full tables live in LEADERBOARD.md
         blk += [f"Full tables with every dataset, task and probe, plus model details: [`LEADERBOARD.md`](LEADERBOARD.md).",
                 "", "<!-- LEADERBOARD:END -->"]
