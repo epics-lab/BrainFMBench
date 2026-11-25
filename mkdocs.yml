@@ -10,8 +10,7 @@ copyright: Code MIT · labels CC BY-NC-SA 4.0 · EPICS Lab, Krembil Centre for N
 
 theme:
   name: material
-  logo: assets/logo.svg
-  favicon: assets/logo.svg
+  favicon: assets/favicon.svg
   font:
     text: Inter
     code: JetBrains Mono
@@ -42,6 +41,7 @@ theme:
     - content.tabs.link
     - toc.follow
   icon:
+    logo: material/brain
     repo: fontawesome/brands/github
 
 extra_css:
