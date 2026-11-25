@@ -5,6 +5,7 @@
 <p align="center">
   <a href="https://papers.miccai.org/miccai-2026-sat/paper/MedAGI_025.pdf"><img src="https://img.shields.io/badge/paper-MICCAI_2026_MedAGI-0b3d91?logo=adobeacrobatreader&logoColor=white" alt="Paper"></a>
   <a href="https://www.epics-lab.ca/BrainFMBench/"><img src="https://img.shields.io/badge/leaderboard-live-2e8b57" alt="Leaderboard"></a>
+  <a href="https://www.epics-lab.ca/BrainFMBench/docs/"><img src="https://img.shields.io/badge/docs-catalog-1f4e3d?logo=materialformkdocs&logoColor=white" alt="Docs"></a>
   <a href="https://huggingface.co/spaces/epics-lab/BrainFMBench"><img src="https://img.shields.io/badge/%F0%9F%A4%97_Hugging_Face-Space-ffcc4d" alt="Hugging Face Space"></a>
   <a href="LEADERBOARD.md#models"><img src="https://img.shields.io/badge/%F0%9F%A7%A0_Models-12-e67e22" alt="Models"></a>
   <a href="#scoring-protocol"><img src="https://img.shields.io/badge/probes-linear_%C2%B7_random_forest-34495e" alt="Probes"></a>

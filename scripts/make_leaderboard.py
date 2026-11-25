@@ -687,6 +687,7 @@ def make_interactive(itable, out_html, extra_html=""):
             ".prepctl{margin:4px 0 18px;padding:10px 14px;border:1px solid #dde3ea;border-radius:6px;background:#f7f9fb;max-width:900px}.prepctl label{font-size:15px;cursor:pointer}.prepctl .sub{margin-top:4px}</style>"
             "</head><body>\n"
             "<p><a href=\"https://github.com/epics-lab/BrainFMBench\">epics-lab/BrainFMBench</a>"
+            " &middot; <a href=\"https://www.epics-lab.ca/BrainFMBench/docs/\">Docs</a>"
             " &middot; auto generated from <code>models/*/results.json</code></p>\n"
             + controls + "\n" + ovhtml + "\n" + prep_ctl + "\n<h2 style=\"margin:18px 0 2px\">Detail</h2>\n" + plot + "\n" + extra_html + "\n" + script + "\n</body></html>\n")
     print(f"Wrote {out_html}")

@@ -3,3 +3,6 @@ __pycache__/
 *.save
 site/
 models/*/results.*.*.json
+.docs_build/
+mkdocs.gen.yml
+site/docs/

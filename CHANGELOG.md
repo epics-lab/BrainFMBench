@@ -4,6 +4,7 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 
 ## Unreleased
 
+- Docs site at /docs: a catalog page for every model and dataset, the protocol, a submission quickstart and the release notes, rebuilt from the repository on every leaderboard update
 - Hugging Face Space lists every benchmarked model hosted on the Hub, so each model page links back to the leaderboard
 - Models: Neuro-JEPA-B and Neuro-JEPA-L, submitted by their authors
 - README: shorter first screen with five badges, a three line summary and the overview figure; the full tables stay in LEADERBOARD.md
