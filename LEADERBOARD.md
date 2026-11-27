@@ -5,7 +5,7 @@ Classification reports balanced accuracy and AUC; regression reports MAE and R²
 
 [![BrainFMBench overview](leaderboard_overview.png?v=39281c11)](https://www.epics-lab.ca/BrainFMBench/)
 
-[![Leaderboard boxplots](leaderboard_boxplots.png?v=f7e83888)](https://www.epics-lab.ca/BrainFMBench/)
+[![Leaderboard boxplots](leaderboard_boxplots.png?v=f451a2e4)](https://www.epics-lab.ca/BrainFMBench/)
 
 _Boxes show 5-fold cross-validation across 5 seeds (25 values); overlaid points show held-out test results for the same 5 seeds._
 
