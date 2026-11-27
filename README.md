@@ -20,7 +20,6 @@ and the same linear and random forest probes predict sex, age, BMI and mental he
 To add a model, open a pull request: see [CONTRIBUTING.md](CONTRIBUTING.md). The leaderboard updates automatically.
 
 Paper: [MICCAI 2026 MedAGI workshop](https://papers.miccai.org/miccai-2026-sat/paper/MedAGI_025.pdf) ·
-[bioRxiv preprint](https://www.biorxiv.org/content/10.64898/2026.05.15.725427v4) ·
 [Papers with Code](https://paperswithcode.co/paper/132944) · Code MIT, labels CC BY-NC-SA 4.0 ([details](labels/README.md))
 
 <!-- LEADERBOARD:START -->
@@ -133,20 +132,17 @@ leaderboard is reproducible run to run.
 
 ## Citation
 
-If you use BrainFMBench, please cite the preprint for now:
+If you use BrainFMBench, please cite:
 
 ```bibtex
-@article{encin2026comparative,
-  title     = {A Comparative Evaluation of Structural MRI Foundation Models for Age, Sex, and Body-Mass Index Predictions},
+@inproceedings{encin2026comparative,
   author    = {Encin, Arel and Gilmore, Asa and Rokem, Ariel and Dickie, Erin and Glatard, Tristan},
-  journal   = {bioRxiv},
-  pages     = {2026.05.15.725427},
+  title     = {A Comparative Evaluation of Structural {MRI} Foundation Models for Age, Sex, and Body-Mass Index Predictions},
+  booktitle = {Medical Image Computing and Computer Assisted Intervention -- {MICCAI} 2026 Satellite Events. Foundation Models, World Models, and Multimodal Learning (I)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {17261},
+  publisher = {Springer},
   year      = {2026},
-  publisher = {Cold Spring Harbor Laboratory},
-  doi       = {10.64898/2026.05.15.725427}
+  doi       = {10.1007/978-3-032-43331-2_13}
 }
 ```
-
-The paper was presented at the MedAGI workshop at MICCAI 2026
-([paper page](https://papers.miccai.org/miccai-2026-sat/MedAGI_025.html)).
-Once the proceedings are published, please cite the MICCAI version instead.

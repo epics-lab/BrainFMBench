@@ -24,7 +24,7 @@ keywords:
   - structural MRI
   - neuroimaging
 preferred-citation:
-  type: article
+  type: conference-paper
   title: "A Comparative Evaluation of Structural MRI Foundation Models for Age, Sex, and Body-Mass Index Predictions"
   authors:
     - family-names: Encin
@@ -37,6 +37,12 @@ preferred-citation:
       given-names: Erin
     - family-names: Glatard
       given-names: Tristan
-  journal: bioRxiv
+  collection-title: "Medical Image Computing and Computer Assisted Intervention -- MICCAI 2026 Satellite Events. Foundation Models, World Models, and Multimodal Learning (I)"
+  collection-type: proceedings
+  conference:
+    name: "MICCAI 2026 MedAGI workshop"
+  volume: 17261
+  publisher:
+    name: Springer
   year: 2026
-  doi: 10.64898/2026.05.15.725427
+  doi: 10.1007/978-3-032-43331-2_13

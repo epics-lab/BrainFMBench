@@ -358,7 +358,8 @@ def jsonld(date_modified):
         "isAccessibleForFree": True,
         "creator": {"@type": "Organization", "name": "EPICS Lab", "url": "https://www.epics-lab.ca"},
         "citation": "Encin, A., Gilmore, A., Rokem, A., Dickie, E., Glatard, T. A Comparative Evaluation of Structural "
-                    "MRI Foundation Models for Age, Sex, and Body-Mass Index Predictions. MICCAI 2026 MedAGI workshop.",
+                    "MRI Foundation Models for Age, Sex, and Body-Mass Index Predictions. MICCAI 2026 Satellite Events, "
+                    "LNCS 17261, Springer. https://doi.org/10.1007/978-3-032-43331-2_13",
         "isBasedOn": "https://reprobrainchart.github.io/",
         "measurementTechnique": "Structural T1-weighted MRI",
         "variableMeasured": ["sex", "age", "body mass index", "p factor", "internalizing",

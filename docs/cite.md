@@ -1,15 +1,17 @@
 # Cite
 
-If you use BrainFMBench, please cite the paper. The Lecture Notes in Computer Science version will replace the preprint once the MICCAI 2026 satellite proceedings are online.
+If you use BrainFMBench, please cite the paper.
 
 ```bibtex
-@article{encin2026comparative,
-  title     = {A Comparative Evaluation of Structural MRI Foundation Models for Age, Sex, and Body-Mass Index Predictions},
+@inproceedings{encin2026comparative,
   author    = {Encin, Arel and Gilmore, Asa and Rokem, Ariel and Dickie, Erin and Glatard, Tristan},
-  journal   = {bioRxiv},
-  pages     = {2026.05.15.725427},
+  title     = {A Comparative Evaluation of Structural {MRI} Foundation Models for Age, Sex, and Body-Mass Index Predictions},
+  booktitle = {Medical Image Computing and Computer Assisted Intervention -- {MICCAI} 2026 Satellite Events. Foundation Models, World Models, and Multimodal Learning (I)},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {17261},
+  publisher = {Springer},
   year      = {2026},
-  doi       = {10.64898/2026.05.15.725427}
+  doi       = {10.1007/978-3-032-43331-2_13}
 }
 ```
 
