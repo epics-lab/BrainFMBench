@@ -3,6 +3,7 @@
 import glob
 import json
 import os
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -681,12 +682,20 @@ def make_interactive(itable, out_html, extra_html=""):
             print("wrote overview png")
     except Exception as e:
         print(f"overview png export failed: {e}")
+    # static overview shown until Plotly has loaded and drawn the interactive heatmap
+    ph = ""
+    src_png = os.path.join(REPO, "leaderboard_overview.png")
+    if os.path.isfile(src_png):
+        os.makedirs(os.path.dirname(out_html), exist_ok=True)
+        shutil.copyfile(src_png, os.path.join(os.path.dirname(out_html), "overview.png"))
+        ph = (f'<img id="ovph" src="overview.png?v={_file_v("leaderboard_overview.png")}" '
+              'alt="BrainFMBench overview heatmap, loading the interactive version" style="width:100%;height:auto">')
     ovhtml = ('<h2 style="margin:18px 0 2px">Overview</h2><div class="ctl"><label>Metric <select id="selMetric">'
               + "".join(f'<option value="{m_}"{" selected" if m_ == "main" else ""}>{t_}</option>' for m_, t_ in OV_METRIC_NAMES)
               + '</select></label></div><div class="sub">Held out test. Color: improvement over chance, relative to the best '
               'model in each row; pale rows are near chance. Arrows give the direction: ↑ higher is better, ↓ lower is better. Chance is 0.5 for balanced accuracy and AUC, 0 for R², and for '
               'MAE the error of predicting the training mean, so MAE color is the fraction of that error removed. Boxed: the best '
-              'model in each row. Columns are ordered by the average over rows where at least one model is clearly above chance; rows near chance for every model do not affect the order. n is the number of subjects with that label. Hover for mean ± SD over 5 seeds.</div><div id="ovplot"></div>')
+              'model in each row. Columns are ordered by the average over rows where at least one model is clearly above chance; rows near chance for every model do not affect the order. n is the number of subjects with that label. Hover for mean ± SD over 5 seeds.</div><div id="ovplot">' + ph + '</div>')
     plot = fig.to_html(full_html=False, include_plotlyjs="cdn", div_id="lbplot",
                        config={"responsive": True, "displaylogo": False})
     import html as _h
@@ -725,6 +734,8 @@ def make_interactive(itable, out_html, extra_html=""):
     });
     var ms = document.getElementById('selMetric');
     var k = probe + '|' + prep + '|' + (ms ? ms.value : 'main');
+    var ph = document.getElementById('ovph');
+    if (OV[k] && ph) ph.remove();
     if (OV[k]) Plotly.react('ovplot', OV[k].data, OV[k].layout, {displayModeBar: false, responsive: true});
     Plotly.restyle(gd, {visible: vis, showlegend: legend});
     var lay = {};
