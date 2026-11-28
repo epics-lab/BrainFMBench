@@ -24,7 +24,7 @@ Paper: [MICCAI 2026 MedAGI workshop](https://papers.miccai.org/miccai-2026-sat/p
 
 <!-- LEADERBOARD:START -->
 
-[![BrainFMBench overview](leaderboard_overview.png?v=39281c11)](https://www.epics-lab.ca/BrainFMBench/)
+[![BrainFMBench overview](leaderboard_overview.png?v=d9a56910)](https://www.epics-lab.ca/BrainFMBench/)
 
 **[Interactive version](https://www.epics-lab.ca/BrainFMBench/)**
 
