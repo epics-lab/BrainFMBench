@@ -4,10 +4,9 @@ BrainFMBench follows the release policy in [CONTRIBUTING.md](CONTRIBUTING.md#ver
 
 ## Unreleased
 
-- Docs: every model page offers a ready to paste LaTeX comparison table against all models, for the linear and random forest probes; the leaderboard page has the same table for all models, linked from the README
-- README names every model on the leaderboard with a link to its docs page; the new issue page links to the submission guide, leaderboard and docs
-- Search and sharing: page descriptions, a link preview image, canonical links, and a schema.org Dataset record so the benchmark is listed in Google Dataset Search
-- Docs site at /docs: a catalog page for every model and dataset, the protocol, a submission quickstart and the release notes, rebuilt from the repository on every leaderboard update
+- 3D-Neuro-SimCLR, rigid and affine, now uses the reference preprocessing from the 3D-Neuro-SimCLR repo: fixed crop and standardization within the brain mask, confirmed with the 3D-Neuro-SimCLR authors. This changes both models' numbers (#68)
+- Docs site at /docs: a catalog page for every model and dataset, the protocol, a submission quickstart and the release notes. Each model page and the leaderboard page offer a ready to paste LaTeX comparison table for the linear and random forest probes
+- Citation: the MICCAI 2026 Lecture Notes in Computer Science chapter replaces the bioRxiv preprint
 - Hugging Face Space lists every benchmarked model hosted on the Hub, so each model page links back to the leaderboard
 - Models: Neuro-JEPA-B and Neuro-JEPA-L, submitted by their authors
 - README: shorter first screen with five badges, a three line summary and the overview figure; the full tables stay in LEADERBOARD.md

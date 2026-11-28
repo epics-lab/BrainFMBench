@@ -457,10 +457,6 @@ def page_index(models, infos, native):
     n_models = len(models)
     n_fm = sum(1 for m in models if not m.startswith("FS "))
     n_sub = sum(i["n"] for i in infos.values())
-    changes = []
-    cl = open(os.path.join(REPO, "CHANGELOG.md")).read().split("## ")
-    for block in cl[1:2]:
-        changes = [ln[2:] for ln in block.splitlines() if ln.startswith("- ")][:4]
     today = datetime.date.today().strftime("%B %-d, %Y")
     lines = [
         "---", "hide:", "  - navigation", "  - toc", "---", "",
@@ -499,8 +495,6 @@ def page_index(models, infos, native):
         "## The leaderboard today", "",
         f"[![Overview heatmap](assets/fig/leaderboard_overview.png){{ .bfb-fig }}]({SITE})", "",
     ]
-    if changes:
-        lines += ["## What's new", ""] + [f"- {c}" for c in changes] + ["", "[All releases](releases.md)", ""]
     lines += [f"<p class='bfb-muted'>Numbers on this site are rebuilt from the repository on every update. Last build {today}.</p>", ""]
     return "\n".join(lines)
 
