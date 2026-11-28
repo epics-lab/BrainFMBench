@@ -9,7 +9,6 @@ import sys
 import glob
 
 import numpy as np
-import nibabel as nib
 import torch
 import torch.nn.functional as F
 
@@ -18,7 +17,6 @@ PATCH = 16
 DO_RESAMPLE = False
 
 def resample_1mm(t, zooms):
-    # Matches monai Spacingd(pixdim=1, mode="bilinear", padding_mode="border"):
     in_shape = t.shape[2:]
     out_shape = [int(np.floor((n - 1) * z + 1e-6)) + 1 for n, z in zip(in_shape, zooms)]
     axes = [torch.arange(m, dtype=torch.float64) / z / (n - 1) * 2 - 1
@@ -28,20 +26,28 @@ def resample_1mm(t, zooms):
     return F.grid_sample(t, grid, mode="bilinear", padding_mode="border", align_corners=True)
 
 
-EPS = 1e-6
+_TRANSFORM = None
+
+
+def _transform():
+    global _TRANSFORM
+    if _TRANSFORM is None:
+        from monai.transforms import Compose, LoadImaged, NormalizeIntensityd, SignalFillEmptyd
+        _TRANSFORM = Compose([
+            LoadImaged(keys=["image"]),
+            SignalFillEmptyd(keys=["image"]),
+            NormalizeIntensityd(keys=["image"], nonzero=True, channel_wise=True),
+        ])
+    return _TRANSFORM
 
 
 def load_volume(path):
-    img = nib.load(path)
-    assert np.allclose(img.header.get_zooms()[:3], 1.0, atol=1e-3), f"{path} is not 1mm isotropic"
-    v = np.nan_to_num(img.get_fdata().astype(np.float32), nan=0.0)
-    brain = v > v.min() + EPS
-    v[~brain] = 0.0
-    x = v[brain]
-    v[brain] = (x - x.mean()) / (x.std() + EPS)
+    img = _transform()({"image": path})["image"]
+    assert np.allclose(np.asarray(img.pixdim[:3]), 1.0, atol=1e-3), f"{path} is not 1mm isotropic"
+    v = img.as_tensor().float()
     pad = [(-n) % PATCH for n in v.shape]
-    v = np.pad(v, [(q // 2, q - q // 2) for q in pad])
-    return torch.from_numpy(v)[None, None]
+    v = F.pad(v, [p for q in reversed(pad) for p in (q // 2, q - q // 2)])
+    return v[None, None]
 
 
 def extract(input_dir, output_csv, weights_dir):
